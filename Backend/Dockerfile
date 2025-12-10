@@ -6,4 +6,4 @@ COPY /demo/build/libs/*.jar app.jar
 
 EXPOSE 8080
 
-CMD ["java", "-jar", "/app/my-spring-boot-app.jar"]
+CMD ["java", "-jar", "/app/app.jar"]
