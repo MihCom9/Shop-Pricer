@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+  database:
+    image: "postgres:latest"
+    ports:
+      - "5432:5432"  # maps container port 5432 to host
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: yourpassword
+      POSTGRES_DB: mydatabase
+    volumes:
+      - ./db-data:/var/lib/postgresql # persist data outside the container
