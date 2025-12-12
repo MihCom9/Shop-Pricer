@@ -2,7 +2,7 @@ FROM eclipse-temurin:25-jdk
 
 WORKDIR /app
 
-COPY /demo/build/libs/*.jar app.jar
+COPY demo/build/libs/*-SNAPSHOT.jar app.jar
 
 EXPOSE 8080
 
