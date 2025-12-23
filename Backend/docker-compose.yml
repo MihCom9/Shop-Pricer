@@ -4,12 +4,29 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://database_postgre:5432/mydatabase
+      SPRING_DATASOURCE_URL: jdbc:postgresql://database:5432/mydatabase
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: yourpassword
-    networks:
-      - shop-pricer
+    depends_on:
+      database:
+        condition: service_healthy
 
-networks:
-  shop-pricer:
-    external: true
+  database:
+    image: "postgres:latest"
+    ports:
+      - "5432:5432"  # maps container port 5432 to host
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: yourpassword
+      POSTGRES_DB: mydatabase
+    volumes:
+      - ./db-data:/var/lib/postgresql # persist data outside the container
+    healthcheck:
+      test: ["CMD", "pg_isready", "--username", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+
+
+
