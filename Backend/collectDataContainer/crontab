@@ -1,0 +1,1 @@
+* * * * * root /usr/local/bin/python3 /app/getData.py >> /logs/cron.log 2>&1

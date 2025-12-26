@@ -1,0 +1,17 @@
+FROM python:3.11-slim
+
+RUN apt-get update && apt-get install -y cron
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY getData.py .
+COPY crontab /etc/cron.d/python-cron
+
+RUN chmod 0644 /etc/cron.d/python-cron
+
+RUN mkdir -p /data/input /data/output /logs
+
+CMD ["cron", "-f"]
