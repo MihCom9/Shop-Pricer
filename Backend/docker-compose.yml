@@ -34,9 +34,9 @@ services:
       context: ./collectDataContainer
       dockerfile: Dockerfile.script
     volumes:
-      - ./storesData/backup:/storesData/backup
-      - ./storesData/stores:/storesData/stores
-      - ./collectDataContainer/logs:/logs
+      - ./local/storesData/backup:/storesData/backup
+      - ./local/storesData/stores:/storesData/stores
+      - ./local/logs:/logs
     restart: unless-stopped
 
 
