@@ -28,12 +28,52 @@ public class Settlement {
         this.oblast=oblast;
         this.obshtina=obshtina;
     }
-
-    public Long getId(){
-        return id;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public String getSid(){
-        return sid;
+    public void setSid(String sid) {
+        this.sid = sid;
     }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getName_en() {
+        return name_en;
+    }
+
+    public void setName_en(String name_en) {
+        this.name_en = name_en;
+    }
+
+    public String getStype() {
+        return stype;
+    }
+
+    public void setStype(String stype) {
+        this.stype = stype;
+    }
+
+    public String getOblast() {
+        return oblast;
+    }
+
+    public void setOblast(String oblast) {
+        this.oblast = oblast;
+    }
+
+    public String getObshtina() {
+        return obshtina;
+    }
+
+    public void setObshtina(String obshtina) {
+        this.obshtina = obshtina;
+    }
+    
 }

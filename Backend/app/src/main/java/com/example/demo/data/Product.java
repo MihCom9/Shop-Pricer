@@ -33,11 +33,60 @@ public class Product {
         this.price_promotion=price_promotion;
     }
 
-    public Long getId(){
-        return id;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public String getCity(){
-        return city;
+    public void setCity(String city) {
+        this.city = city;
     }
+
+    public String getStore() {
+        return store;
+    }
+
+    public void setStore(String store) {
+        this.store = store;
+    }
+
+    public String getProduct_name() {
+        return product_name;
+    }
+
+    public void setProduct_name(String product_name) {
+        this.product_name = product_name;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getPrice() {
+        return price;
+    }
+
+    public void setPrice(String price) {
+        this.price = price;
+    }
+
+    public String getPrice_promotion() {
+        return price_promotion;
+    }
+
+    public void setPrice_promotion(String price_promotion) {
+        this.price_promotion = price_promotion;
+    }
+    
 }

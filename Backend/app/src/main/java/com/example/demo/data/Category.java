@@ -21,11 +21,24 @@ public class Category {
         this.name=name;
     }
 
-    public Long getId(){
-        return id;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public String getcid(){
+    public String getCid() {
         return cid;
     }
+
+    public void setCid(String cid) {
+        this.cid = cid;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+    
 }
