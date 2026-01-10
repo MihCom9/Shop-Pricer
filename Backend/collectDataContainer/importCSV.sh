@@ -20,10 +20,7 @@ EOF
 
 # Import all CSV files
 for file in "$CSV_DIR"/*.csv; do
-    if [[ "$file" == "$CSV_DIR/АНГЕЛ САРАНДИЕВ 2010 ЕООД_201377198.csv" ]]; then
-        echo "Skipping $file"
-        continue
-    fi
+    set +e  # temporarily disable "exit on error"
     DELIM=","
     if head -n 1 "$file" | grep -q ';'; then
         DELIM=";"
@@ -32,7 +29,7 @@ for file in "$CSV_DIR"/*.csv; do
     psql -h "$HOST" -U "$USER" -d "$DB" -c "\copy $TABLE(city,store,product_name,code,category,price,price_promotion) FROM '$file' DELIMITER '$DELIM' CSV HEADER"
     ((num+=1))
 done
-
+set -e  # re-enable "exit on error"
 # Commit transaction
 psql -h "$HOST" -U "$USER" -d "$DB" <<EOF
 COMMIT;
