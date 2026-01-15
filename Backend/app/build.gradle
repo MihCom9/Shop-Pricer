@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '4.0.0'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'checkstyle'
 }
 
 group = 'com.example'
@@ -16,6 +17,16 @@ java {
 
 repositories {
 	mavenCentral()
+}
+checkstyle {
+    toolVersion = "10.12.4"
+	configFile = file("config/checkstyle/checkstyle.xml")
+}
+tasks.withType(Checkstyle) {
+    reports {
+        sarif.required = true
+		html.required = true 
+    }
 }
 ext {
     set('testcontainers.version', "1.19.8")
