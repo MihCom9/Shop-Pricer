@@ -17,10 +17,9 @@ psql -h "$HOST" -U "$USER" -d "$DB" <<EOF
 BEGIN;
 TRUNCATE TABLE $TABLE;
 EOF
-
+set +e  # temporarily disable "exit on error"
 # Import all CSV files
 for file in "$CSV_DIR"/*.csv; do
-    set +e  # temporarily disable "exit on error"
     DELIM=","
     if head -n 1 "$file" | grep -q ';'; then
         DELIM=";"
