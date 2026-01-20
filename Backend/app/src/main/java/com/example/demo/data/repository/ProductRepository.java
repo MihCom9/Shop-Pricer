@@ -17,16 +17,27 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
     List<Product> findByStore(String store);
 
     // Find products by product name containing a keyword (case insensitive)
-    List<Product> findByProduct_nameContainingIgnoreCase(String keyword);
-
+    List<Product> findByProductNameContainingIgnoreCase(String keyword);
+    
     List<Product> findByCategory(String category);
 
-    @Query("SELECT p FROM Product p " +
-           "WHERE p.city = :city " +
-           "AND LOWER(p.product_name) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-           "ORDER BY CAST(p.price AS double) ASC") // sort by price ascending
+   @Query("""
+    SELECT p FROM Product p
+    WHERE p.city = :city
+    AND LOWER(p.productName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    """)
     List<Product> searchProductsByCityAndKeyword(
             @Param("city") String city,
             @Param("keyword") String keyword
+    );
+
+    @Query("""
+    SELECT p FROM Product p
+    WHERE p.city = :city
+    AND LOWER(p.productName) LIKE LOWER(CONCAT('%', :name, '%'))
+    """)
+    List<Product> findMatchingProducts(
+            @Param("city") String city,
+            @Param("name") String name
     );
 }

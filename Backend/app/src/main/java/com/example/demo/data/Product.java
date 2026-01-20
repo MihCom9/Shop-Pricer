@@ -2,6 +2,9 @@
 // "72624","БАЛИК - ул.Орфей №36","СИРЕНЕ КРАВЕ РОДОПЕЯ 1КГ КУТИЯ","000006","9","21.99",""
 package com.example.demo.data;
 
+import java.math.BigDecimal;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -15,10 +18,12 @@ public class Product {
     private Long id;
     private String city;
     private String store;
-    private String product_name;
+    @Column(name = "product_name")
+    private String productName;
     private String code;
     private String category;
     private String price;
+    @Column(nullable = true)
     private String price_promotion;
 
     protected Product() {}
@@ -26,7 +31,7 @@ public class Product {
     public Product(String city,String store,String product_name,String code,String category,String price,String price_promotion){
         this.city=city;
         this.store=store;
-        this.product_name=product_name;
+        this.productName=product_name;
         this.code=code;
         this.category=category;
         this.price=price;
@@ -49,12 +54,12 @@ public class Product {
         this.store = store;
     }
 
-    public String getProduct_name() {
-        return product_name;
+    public String getProductName() {
+        return productName;
     }
 
-    public void setProduct_name(String product_name) {
-        this.product_name = product_name;
+    public void setProductName(String productName) {
+        this.productName = productName;
     }
 
     public String getCode() {
@@ -88,5 +93,29 @@ public class Product {
     public void setPrice_promotion(String price_promotion) {
         this.price_promotion = price_promotion;
     }
+    public BigDecimal getPriceAsDecimal() {
+    if (price == null || price.isEmpty()) return null;
+    return new BigDecimal(price.replace(",", "."));
+    }
+
+    public BigDecimal getPricePromotionAsDecimal() {
+        if (price_promotion == null || price_promotion.isEmpty()) return null;
+        return new BigDecimal(price_promotion.replace(",", "."));
+    }
+
+    public BigDecimal getEffectivePrice() {
+        try {
+            if (price_promotion != null && !price_promotion.isEmpty()) {
+                return new BigDecimal(price_promotion);
+            }
+            if (price != null && !price.isEmpty()) {
+                return new BigDecimal(price);
+            }
+        } catch (NumberFormatException e) {
+            // fallback
+        }
+        return BigDecimal.ZERO;
+    }
+
     
 }
