@@ -1,3 +1,4 @@
+### incorrect change
 # Introduction
 
 This project is a web/mobile platform designed to help users in Bulgaria shop smarter and cheaper. The main idea is that the application automatically calculates where it is the cheapest to buy your entire shopping list. The goal of the project is to make shopping more transparent, accessible, and efficient by providing a tool that saves time, money, and effort.
