@@ -1,6 +1,5 @@
 package com.example.demo.controllers;
 
-import com.example.demo.data.Product;
 import com.example.demo.model.SearchProduct;
 import com.example.demo.model.StoreResult;
 import com.example.demo.service.ShoppingService;
@@ -8,9 +7,7 @@ import com.example.demo.service.ShoppingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/shop")
@@ -29,7 +26,9 @@ public class ShopController {
             @RequestBody List<SearchProduct> shoppingList
     ) {
         // Call the service directly
-        return shoppingService.findCheapestStore(city, shoppingList);
+        StoreResult finalStoreResult= shoppingService.findCheapestStore(city, shoppingList);
+        
+        return finalStoreResult;
     }
 
     // @GetMapping("/search")

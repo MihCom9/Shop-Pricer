@@ -95,18 +95,21 @@ public class Product {
     }
     public BigDecimal getPriceAsDecimal() {
     if (price == null || price.isEmpty()) return null;
-    return new BigDecimal(price.replace(",", "."));
+    return new BigDecimal(price.trim().replace(",", "."));
     }
 
     public BigDecimal getPricePromotionAsDecimal() {
         if (price_promotion == null || price_promotion.isEmpty()) return null;
-        return new BigDecimal(price_promotion.replace(",", "."));
+        return new BigDecimal(price_promotion.trim().replace(",", "."));
     }
 
     public BigDecimal getEffectivePrice() {
         try {
             if (price_promotion != null && !price_promotion.isEmpty()) {
-                return new BigDecimal(price_promotion);
+                BigDecimal promoPrice = new BigDecimal(price_promotion.trim().replace(",", "."));
+                if (promoPrice.compareTo(BigDecimal.ZERO) > 0) {
+                    return promoPrice;
+                }
             }
             if (price != null && !price.isEmpty()) {
                 return new BigDecimal(price);

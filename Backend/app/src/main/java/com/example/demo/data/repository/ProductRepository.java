@@ -34,10 +34,10 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
     @Query("""
     SELECT p FROM Product p
     WHERE p.city = :city
-    AND LOWER(p.productName) LIKE LOWER(CONCAT('%', :name, '%'))
+    AND p.productName ILIKE CONCAT('%', :name, '%')
     """)
     List<Product> findMatchingProducts(
-            @Param("city") String city,
-            @Param("name") String name
+        @Param("city") String city,
+        @Param("name") String name
     );
 }
