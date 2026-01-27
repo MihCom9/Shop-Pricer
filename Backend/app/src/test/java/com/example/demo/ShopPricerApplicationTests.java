@@ -35,14 +35,14 @@ class ShoppingServiceTest {
     @Test
     void testCheapestStore() {
         // Arrange: mock repository to return products
-        when(productRepository.findMatchingProducts("72624", "СИРЕНЕ"))
+        when(productRepository.findMatchingProductsBrand("72624", "%СИРЕНЕ%",null))
 		.thenReturn(List.of(
 			new Product("72624","StoreA","СИРЕНЕ","000006","9",
 						"21.99", null),
 			new Product("72624","StoreB","СИРЕНЕ","000006","9",
 						"20.50", "19.99")
 		));
-        SearchProduct searchProduct = new SearchProduct("СИРЕНЕ", null,"Milka", 2,0);
+        SearchProduct searchProduct = new SearchProduct("СИРЕНЕ", null,null, 2,0);
 
         // Act
         StoreResult result = shoppingService.findCheapestStore(
