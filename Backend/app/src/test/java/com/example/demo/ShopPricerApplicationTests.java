@@ -42,7 +42,7 @@ class ShoppingServiceTest {
 			new Product("72624","StoreB","СИРЕНЕ","000006","9",
 						"20.50", "19.99")
 		));
-        SearchProduct searchProduct = new SearchProduct("СИРЕНЕ", null, 2);
+        SearchProduct searchProduct = new SearchProduct("СИРЕНЕ", null,"Milka", 2,0);
 
         // Act
         StoreResult result = shoppingService.findCheapestStore(

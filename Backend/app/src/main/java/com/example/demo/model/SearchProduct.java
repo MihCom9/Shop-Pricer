@@ -3,12 +3,17 @@ package com.example.demo.model;
 public class SearchProduct {
     private String name;
     private String productSort;
+    private String brand;
     private Integer quantity;
+    private Integer weightInGrams;
 
-    public SearchProduct(String name,String productSort,Integer quantity ){
+    public SearchProduct(String name,String productSort,String brand,Integer quantity,Integer weightInGrams){
         this.name=name;
         this.productSort=productSort;
+        this.brand=brand;
         this.quantity=quantity;
+        this.weightInGrams=weightInGrams;
+        
     }
     public String toString() {
         return "SearchProduct{" +
@@ -40,5 +45,21 @@ public class SearchProduct {
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
+
+    public String getBrand() {
+        return brand;
+    }
+
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+    
+    public Integer getWeightInGrams() {
+        return weightInGrams;
+    }
+    public void setWeightInGrams(Integer weightInGrams) {
+        this.weightInGrams = weightInGrams;
+    }
+    
 
 }

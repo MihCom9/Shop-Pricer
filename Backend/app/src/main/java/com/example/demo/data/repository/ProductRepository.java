@@ -40,4 +40,15 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
         @Param("city") String city,
         @Param("name") String name
     );
+    @Query("""
+    SELECT p FROM Product p
+    WHERE p.city = :city
+      AND p.productName ILIKE :name
+      AND (:brand IS NULL OR p.productName ILIKE :brand)
+    """)
+    List<Product> findMatchingProductsBrand(
+        @Param("city") String city,
+        @Param("name") String name,
+        @Param("brand") String brand
+    );
 }
