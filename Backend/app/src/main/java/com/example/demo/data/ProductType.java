@@ -1,7 +1,10 @@
 package com.example.demo.data;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -22,10 +25,13 @@ public class ProductType {
     @Column(nullable = false, unique = true, length = 30)
     private String code;  // CHEESE, MILK, etc.
 
-    @Column(nullable = false, length = 100)
-    private String displayName;  // СИРЕНЕ, МЛЯКО, etc.
+    @OneToMany(mappedBy = "productType", fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private Set<ProductTypeAlias> aliases;
+
 
     @OneToMany(mappedBy = "productType", fetch = FetchType.LAZY)
+    @JsonManagedReference
     private Set<Brand> brands;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -33,9 +39,8 @@ public class ProductType {
 
     protected ProductType(){}
 
-    public ProductType(String code, String displayName) {
+    public ProductType(String code) {
         this.code = code;
-        this.displayName = displayName;
     }
 
     public Long getId() {
@@ -50,20 +55,20 @@ public class ProductType {
         this.code = code;
     }
 
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
-    }
-
     public Set<Brand> getBrands() {
         return brands;
     }
 
     public void setBrands(Set<Brand> brands) {
         this.brands = brands;
+    }
+
+    public Set<ProductTypeAlias> getAliases() {
+        return aliases;
+    }
+
+    public void setAliases(Set<ProductTypeAlias> aliases) {
+        this.aliases = aliases;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -78,5 +83,15 @@ public class ProductType {
     public void removeBrand(Brand brand) {
         brands.remove(brand);
         brand.setProductType(null);
+    }
+    
+    public void addAlias(ProductTypeAlias alias) {
+        aliases.add(alias);
+        alias.setProductType(this); // keep the relation consistent
+    }
+
+    public void removeAlias(ProductTypeAlias alias) {
+        aliases.remove(alias);
+        alias.setProductType(null);
     }
 }

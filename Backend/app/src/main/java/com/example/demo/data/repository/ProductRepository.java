@@ -2,6 +2,8 @@ package com.example.demo.data.repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -14,6 +16,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByCity(String city);
 
     Product findById(long id);
+
+    Slice<Product> findAllBy(Pageable page);
 
     List<Product> findByStore(String store);
 
