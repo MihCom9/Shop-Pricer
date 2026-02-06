@@ -6,6 +6,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -22,15 +23,18 @@ public class ProductType {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 30)
-    private String code;  // CHEESE, MILK, etc.
+    @Column(nullable = false, unique = true)
+    private Integer code;  // 1,2,3,4
 
-    @OneToMany(mappedBy = "productType", fetch = FetchType.LAZY)
+    @Column(nullable = false, unique = true, length = 255)
+    private String productName;
+
+    @OneToMany(mappedBy = "productType", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private Set<ProductTypeAlias> aliases;
 
 
-    @OneToMany(mappedBy = "productType", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "productType", fetch = FetchType.LAZY, cascade = CascadeType.ALL,orphanRemoval = true)
     @JsonManagedReference
     private Set<Brand> brands;
 
@@ -39,20 +43,29 @@ public class ProductType {
 
     protected ProductType(){}
 
-    public ProductType(String code) {
+    public ProductType(Integer code, String productName) {
         this.code = code;
+        this.productName=productName;
     }
 
     public Long getId() {
         return id;
     }
 
-    public String getCode() {
+    public Integer getCode() {
         return code;
     }
 
-    public void setCode(String code) {
+    public void setCode(Integer code) {
         this.code = code;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
     }
 
     public Set<Brand> getBrands() {
@@ -94,4 +107,5 @@ public class ProductType {
         aliases.remove(alias);
         alias.setProductType(null);
     }
+
 }
