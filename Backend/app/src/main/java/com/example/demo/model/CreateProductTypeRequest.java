@@ -1,17 +1,27 @@
 package com.example.demo.model;
 
 public class CreateProductTypeRequest {
-    private String code;
-    
-    public CreateProductTypeRequest(String code) {
+    private Integer code;
+    private String productName;
+
+    public CreateProductTypeRequest(Integer code,String productName) {
         this.code = code;
+        this.productName=productName;
     }
 
-    public String getCode() {
+    public Integer getCode() {
         return code;
     }
 
-    public void setCode(String code) {
+    public void setCode(Integer code) {
         this.code = code;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
     }   
 }
