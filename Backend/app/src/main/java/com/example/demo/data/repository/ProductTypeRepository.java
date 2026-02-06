@@ -9,9 +9,16 @@ import java.util.Optional;
 
 public interface ProductTypeRepository extends JpaRepository<ProductType, Long> {
 
-    Optional<ProductType> findByCodeIgnoreCase(String code);
+    Optional<ProductType> findByCode(Integer code);
 
-    boolean existsByCodeIgnoreCase(String code);
+    boolean existsByCode(Integer code);
+
+    Optional<ProductType> findByProductNameIgnoreCase(String productName);
+
+    boolean existsByProductNameIgnoreCase(String productName);
+
+    @Query("select pt.productName from ProductType pt")
+    List<String> findAllProductNames();
 
     @Query("""
     select distinct pt
@@ -20,4 +27,9 @@ public interface ProductTypeRepository extends JpaRepository<ProductType, Long> 
     left join fetch pt.brands
     """)
     List<ProductType> findAllWithAliasesAndBrands();
+
+    void deleteByCode(Integer code);
+
+    void deleteByProductNameIgnoreCase(String productName);
+
 }
