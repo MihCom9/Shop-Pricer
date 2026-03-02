@@ -2,7 +2,9 @@ package com.example.demo.service;
 
 import java.math.BigInteger;
 import java.util.List;
+import org.slf4j.Logger;
 
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.PageRequest;
@@ -26,7 +28,7 @@ public class BrandExtractor {
     private final ProductTypeRepository productTypeRepository;
     private final BrandRepository brandRepository;
     private final ProductTypeAliasRepository productTypeAliasRepository;
-
+    Logger logger = LoggerFactory.getLogger(BrandExtractor.class);
     @Autowired
     public BrandExtractor(ProductRepository productRepository,
                         ProductTypeRepository productTypeRepository,
@@ -59,6 +61,7 @@ public class BrandExtractor {
                 if(matchedType == null){
                     missingProductFound++;
                     // System.out.printf("Product %s with product code %s has been found for missing product type in db\n",product.getProductName(),product.getCategory());
+                    logger.info("Product {} with product code {} has been found for missing product type in db\n",product.getProductName(),product.getCategory());
                     continue;
                 }
                 String normalizedProductName =productName.toLowerCase();
@@ -67,15 +70,15 @@ public class BrandExtractor {
                 
                 if (!hasBrand && !(15<=matchedType.getCode()&&matchedType.getCode()<=25)) {
                     missingProductFound++;
-                    // System.out.printf("Product %s with product code %s has been found for missing product type in db\n",product.getProductName(),product.getCategory());
+                    logger.info("Product {} with product code {} has been found for missing product type in db\n",product.getProductName(),product.getCategory());
                 }else{
                     skippedProduct = skippedProduct.add(BigInteger.ONE);
                     // System.out.printf("Product %s is in db\n",product.getProductName());
                     continue;
                 }
                 if(missingProductFound>=maxPrint){
-                    System.out.println("Found needed number of products");
-                    System.out.printf("Skipped %s products in the procces\n",skippedProduct);
+                    logger.info("Found needed number of products");
+                    logger.info("Skipped {} products in the procces\n",skippedProduct);
                     return;
                 }
             }
@@ -90,8 +93,8 @@ public class BrandExtractor {
             }
 
         }
-        System.out.println("Found needed number of products");
-        System.out.printf("Skipped %s products in the procces\n",skippedProduct);
+        logger.info("Found needed number of products");
+        logger.info("Skipped {} products in the procces\n",skippedProduct);
     }
     @Transactional
     public Brand addBrand(String productTypeName, String brandName) {
@@ -109,8 +112,7 @@ public class BrandExtractor {
             .filter(b -> b.getName().equalsIgnoreCase(brandName))
             .findFirst()
             .orElseGet(() -> {
-                Brand brand = new Brand(brandName);
-                brand.setProductType(pt);
+                Brand brand = new Brand(brandName, pt);
                 return brandRepository.save(brand);
             });
     }
