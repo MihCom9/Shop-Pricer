@@ -48,8 +48,9 @@ public class Brand {
 
     protected Brand(){}
 
-    public Brand(String name) {
+    public Brand(String name, ProductType productType) {
         this.name = name;
+        this.productType= productType;
     }
 
     public Long getId() {
