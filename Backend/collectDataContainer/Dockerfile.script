@@ -7,11 +7,11 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY getData.py .
-COPY importCSV.sh .
-COPY runScript.sh .
-COPY import_csv.py .
-COPY crontab /etc/cron.d/python-cron
+COPY ./Scripts/Extract/getData.py .
+COPY ./Scripts/Import/importCSV.sh .
+COPY ./Scripts/runScript.sh .
+COPY ./Scripts/Import/import_csv.py .
+COPY ./Scheduler/crontab /etc/cron.d/python-cron
 
 RUN chmod 0644 /etc/cron.d/python-cron
 RUN chmod a+x ./importCSV.sh
