@@ -10,6 +10,20 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
-  logging:
-    level:
-      org.springframework.web: DEBUG
+logging:
+  level:
+    root: WARN
+    com.example.demo.service.BrandExtractor: DEBUG
+    com.example.demo: INFO
+    org.hibernate.SQL: DEBUG
+  file:
+    name: /logs/appBrand.log
+  logback:
+    rollingpolicy:
+      # Max size of a single file before it creates a new one
+      max-file-size: 50MB
+      # How many days of logs to keep before deleting the oldest
+      max-history: 7
+      # Total size limit for ALL log files combined
+      total-size-cap: 500MB
+

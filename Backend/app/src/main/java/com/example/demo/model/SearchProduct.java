@@ -2,23 +2,21 @@ package com.example.demo.model;
 
 public class SearchProduct {
     private String name;
-    private String productSort;
+    private String category;
     private String brand;
     private Integer quantity;
-    private Integer weightInGrams;
 
-    public SearchProduct(String name,String productSort,String brand,Integer quantity,Integer weightInGrams){
+    public SearchProduct(String name,String category,String brand,Integer quantity){
         this.name=name;
-        this.productSort=productSort;
+        this.category=category;
         this.brand=brand;
         this.quantity=quantity;
-        this.weightInGrams=weightInGrams;
         
     }
     public String toString() {
         return "SearchProduct{" +
                "name='" + name + '\'' +
-               ", productSort='" + productSort + '\'' +
+               ", category='" + category + '\'' +
                ", quantity=" + quantity +
                '}';
     }
@@ -31,11 +29,11 @@ public class SearchProduct {
     }
 
     public String getProductSort() {
-        return productSort;
+        return category;
     }
 
-    public void setProductSort(String productSort) {
-        this.productSort = productSort;
+    public void setProductSort(String category) {
+        this.category = category;
     }
 
     public Integer getQuantity() {
@@ -53,12 +51,11 @@ public class SearchProduct {
     public void setBrand(String brand) {
         this.brand = brand;
     }
-    
-    public Integer getWeightInGrams() {
-        return weightInGrams;
+    public String getCategory() {
+        return category;
     }
-    public void setWeightInGrams(Integer weightInGrams) {
-        this.weightInGrams = weightInGrams;
+    public void setCategory(String category) {
+        this.category = category;
     }
     
 

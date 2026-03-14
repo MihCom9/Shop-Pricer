@@ -10,7 +10,7 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: yourpassword
     volumes:
-      - ./local/logs:/logs
+      - ./local/logs/javaApp:/logs
     depends_on:
       database:
         condition: service_healthy
