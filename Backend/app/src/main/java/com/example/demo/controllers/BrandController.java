@@ -28,7 +28,7 @@ public class BrandController {
 
     @GetMapping("/admin/extract-brands")
     public String extractBrands(
-            @RequestParam(defaultValue = "1000000") int maxPrint
+            @RequestParam(defaultValue = "2000") int maxPrint
     ) {
         brandExtractor.extractAllBrands(maxPrint);
         return "Brand extraction finished. Check logs.";

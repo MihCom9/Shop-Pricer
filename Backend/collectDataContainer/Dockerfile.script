@@ -10,6 +10,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY getData.py .
 COPY importCSV.sh .
 COPY runScript.sh .
+COPY import_csv.py .
 COPY crontab /etc/cron.d/python-cron
 
 RUN chmod 0644 /etc/cron.d/python-cron

@@ -6,9 +6,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -16,17 +19,27 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.data.Product;
+import com.example.demo.data.ProductType;
 import com.example.demo.data.repository.ProductRepository;
+import com.example.demo.data.repository.ProductTypeRepository;
 import com.example.demo.model.StoreResult;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
+
 import com.example.demo.model.SearchProduct;
 
 @Service
 public class ShoppingService {
-
+    @PersistenceContext
+    private EntityManager entityManager;
     private final ProductRepository productRepository;
+    private final ProductTypeRepository productTypeRepository;
 
-    public ShoppingService(ProductRepository productRepository) {
+    public ShoppingService(ProductRepository productRepository, ProductTypeRepository productTypeRepository) {
         this.productRepository = productRepository;
+        this.productTypeRepository = productTypeRepository;
     }
     private boolean saveStoreResultsInFile(Map<String, Map<String, BigDecimal>> storeProductPrices, int compareSize){
         String filePath = "/logs/appStoreResults.log";
@@ -73,23 +86,29 @@ public class ShoppingService {
         }
         return 0;
     }
-    public StoreResult findCheapestStore(String city, List<SearchProduct> shoppingList) {
+    public List<StoreResult> findCheapestStore(String city, List<SearchProduct> shoppingList) {
 
         Map<String, Map<String, BigDecimal>> storeProductPrices = new HashMap<>();
 
         for (SearchProduct sp : shoppingList) {
 
-            String namePattern = "%" + sp.getName() + "%";
-            String brandPattern = sp.getBrand() == null
-                    ? null
-                    : "%" + sp.getBrand() + "%";
-
-            List<Product> products =
-                productRepository.findMatchingProductsBrand(
-                    city,
-                    namePattern,
-                    brandPattern
+            String namePattern = sp.getName();
+            Integer code = productTypeRepository.findByProductNameIgnoreCase(sp.getCategory())
+                .orElseThrow(() -> new RuntimeException("Product type not found"))
+                .getCode();
+            System.out.print("Code: ");
+            System.out.println(code);
+            List<Product> products;
+            if(!namePattern.isEmpty()){
+                products =
+                    productRepository.findMatchingProductsNew(
+                        city,
+                        code.toString(),
+                        sp.getName()
                 );
+            }else{
+                products =  productRepository.findMatchingProductsEmptyName(city, code.toString());
+            }
 
             // cheapest product PER STORE
             Map<String, Product> cheapestPerStore = products.stream()
@@ -102,41 +121,10 @@ public class ShoppingService {
             for (Map.Entry<String, Product> entry : cheapestPerStore.entrySet()) {
                 Product product = entry.getValue();
 
-                // Determine actual quantity in product's unit
-                int productWeightGrams = 0;
-                int productVolumeMl = 0;
-                if(sp.getWeightInGrams()!=null &&sp.getWeightInGrams()>0){
-                    productWeightGrams = extractGrams(product.getProductName());
-                    System.out.printf("Product %s weight %d\n",product.getProductName(),productWeightGrams);
-                    productVolumeMl = extractMilliliters(product.getProductName());
-                    System.out.printf("Product %s ml %d\n",product.getProductName(),productVolumeMl);
-
-                }
-
                 BigDecimal cost;
                 BigDecimal quantityBD = BigDecimal.valueOf(sp.getQuantity());
-                if (productWeightGrams > 0) {
-                    // User quantity is in grams
-                    // For example, if user wants 200gr, and productWeightGrams=400, scale price by 200/400
-                    BigDecimal requestedWeightBD = BigDecimal.valueOf(sp.getWeightInGrams());
-                    BigDecimal productWeightBD = BigDecimal.valueOf(productWeightGrams);
-
-                    cost = product.getEffectivePrice()
-                            .multiply(requestedWeightBD.divide(productWeightBD, 4, RoundingMode.HALF_UP))
-                            .multiply(quantityBD);
-                } else if (productVolumeMl > 0) {
-                    // User quantity is in milliliters (liters converted to ml)
-                    BigDecimal requestedVolumeBD = BigDecimal.valueOf(sp.getWeightInGrams()); // use grams field for ml if needed
-                    BigDecimal productVolumeBD = BigDecimal.valueOf(productVolumeMl);
-
-                    cost = product.getEffectivePrice()
-                            .multiply(requestedVolumeBD.divide(productVolumeBD, 4, RoundingMode.HALF_UP))
-                            .multiply(quantityBD);
-                } else {
-                    // Unit-based item (no grams or liters)
-                    cost = product.getEffectivePrice()
-                            .multiply(BigDecimal.valueOf(sp.getQuantity()));
-                }
+                cost = product.getEffectivePrice()
+                        .multiply(BigDecimal.valueOf(sp.getQuantity()));
 
                 storeProductPrices
                         .computeIfAbsent(entry.getKey(), k -> new HashMap<>())
@@ -180,16 +168,50 @@ public class ShoppingService {
 
         System.out.printf("Total good stores: %d, bad stores: %d\n", goodStores, badStores);
 
-        // saveStoreResultsInFile(storeProductPrices,shoppingList.size());        
+        saveStoreResultsInFile(storeProductPrices,shoppingList.size());        
         
-        StoreResult cheapestStore= storeTotals.entrySet()
+        List<StoreResult> cheapestStores= storeTotals.entrySet()
                 .stream()
-                .min(Map.Entry.comparingByValue())
-                .map(e -> new StoreResult(e.getKey(), e.getValue()))
-                .orElseThrow(() -> new RuntimeException("No store has all requested products"));
-        Map<String, BigDecimal> cheapestStoreProducts = storeProductPrices.get(cheapestStore.getStore());
+                .sorted(Map.Entry.comparingByValue())
+                .limit(10)
+                .map(e -> new StoreResult(e.getKey(), e.getValue())).toList();
+        if (cheapestStores.isEmpty()) {
+            throw new NoSuchElementException("Store not found");
+        }
+        Map<String, BigDecimal> cheapestStoreProducts = storeProductPrices.get(cheapestStores.get(0).getStore());
         cheapestStoreProducts.forEach((product, price) -> System.out.printf("Product: %s, Price: %.2f\n", product, price.floatValue()));
-        return cheapestStore;
+        return cheapestStores;
+    }
+    void normalizeProductName(List<String> productNames){
+        for (int i = 0; i < productNames.size(); i++) {
+
+            String product = productNames.get(i);
+
+            String[] words = product.split("\\s+");
+
+            for (int j = 0; j < words.length; j++) {
+                if (!words[j].isEmpty()) {
+                    words[j] = words[j].substring(0,1).toUpperCase()
+                            + words[j].substring(1).toLowerCase();
+                }
+            }
+            productNames.set(i, String.join(" ", words));
+            System.out.println(productNames.get(i));
+        }
+    }
+    @Transactional
+    public List<String> getProductsByBrandAndCategory(String category, String brand){
+        ProductType pt= productTypeRepository.findByProductNameIgnoreCase(category)
+        .orElseThrow(() -> new RuntimeException("Product category name not found"));
+        entityManager.createNativeQuery(
+            "SET LOCAL pg_trgm.similarity_threshold = 0.8"
+        ).executeUpdate();
+        List<String> product_names=productRepository.findMatchingProductsBetter(pt.getCode().toString(), brand);
+        // products.stream().forEach(System.out::println);
+        product_names.stream().forEach(a -> System.out.println(a));
+        normalizeProductName(product_names);
+        System.out.println();
+        return product_names;
     }
     
     // public List<Product> searchProductsByCityAndKeyword(String city, String keyword) {

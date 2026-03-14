@@ -1,4 +1,4 @@
 #!/bin/bash
 set -e
 /usr/local/bin/python3 /app/getData.py
-/app/importCSV.sh
+/usr/local/bin/python3 /app/import_csv.py

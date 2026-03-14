@@ -1,5 +1,3 @@
-// "Населено място","Търговски обект","Наименование на продукта","Код на продукта","Категория","Цена на дребно","Цена в промоция"
-// "72624","БАЛИК - ул.Орфей №36","СИРЕНЕ КРАВЕ РОДОПЕЯ 1КГ КУТИЯ","000006","9","21.99",""
 package com.example.demo.data;
 
 import java.math.BigDecimal;
@@ -10,12 +8,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 
 @Entity
-@Table(name = "product_test")
-public class Product {
-
+@Table(name = "product_structured")
+public class ProductStructured {
     @Id
     @GeneratedValue(strategy=GenerationType.AUTO)
     private Long id;
@@ -23,24 +19,26 @@ public class Product {
     private String store;
     @Column(name = "product_name")
     private String name;
+    private String brand;
+    private String weigth;
+    private String addOns;
     private String code;
     private String category;
     private String price;
     @Column(nullable = true)
     private String price_promotion;
-    @Transient
-    private String searchVector;
-
-    protected Product() {}
-
-    public Product(String city,String store,String product_name,String code,String category,String price,String price_promotion){
-        this.city=city;
-        this.store=store;
-        this.name=product_name;
-        this.code=code;
-        this.category=category;
-        this.price=price;
-        this.price_promotion=price_promotion;
+    public ProductStructured(String city, String store, String name, String brand, String weigth, String addOns,
+            String code, String category, String price, String price_promotion) {
+        this.city = city;
+        this.store = store;
+        this.name = name;
+        this.brand = brand;
+        this.weigth = weigth;
+        this.addOns = addOns;
+        this.code = code;
+        this.category = category;
+        this.price = price;
+        this.price_promotion = price_promotion;
     }
 
     public void setId(Long id) {
@@ -65,6 +63,30 @@ public class Product {
 
     public void setProductName(String name) {
         this.name = name;
+    }
+
+     public String getBrand() {
+        return brand;
+    }
+
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+
+    public String getWeigth() {
+        return weigth;
+    }
+
+    public void setWeigth(String weigth) {
+        this.weigth = weigth;
+    }
+
+    public String getAddOns() {
+        return addOns;
+    }
+
+    public void setAddOns(String addOns) {
+        this.addOns = addOns;
     }
 
     public String getCode() {
@@ -125,5 +147,4 @@ public class Product {
         return BigDecimal.ZERO;
     }
 
-    
 }

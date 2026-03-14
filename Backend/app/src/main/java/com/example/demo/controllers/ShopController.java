@@ -1,9 +1,11 @@
 package com.example.demo.controllers;
 
 import com.example.demo.data.Brand;
+import com.example.demo.data.Product;
 import com.example.demo.data.ProductType;
 import com.example.demo.data.ProductTypeAlias;
 import com.example.demo.data.repository.BrandRepository;
+import com.example.demo.data.repository.ProductRepository;
 import com.example.demo.data.repository.ProductTypeRepository;
 import com.example.demo.model.SearchProduct;
 import com.example.demo.model.StoreResult;
@@ -30,14 +32,20 @@ public class ShopController {
     }
 
     @PostMapping("/cheapest")
-    public StoreResult findCheapestStore(
+    public List<StoreResult> findCheapestStore(
             @RequestParam String city,
             @RequestBody List<SearchProduct> shoppingList
     ) {
         // Call the service directly
-        StoreResult finalStoreResult= shoppingService.findCheapestStore(city, shoppingList);
+        try {
+            List<StoreResult> finalStoreResult= shoppingService.findCheapestStore(city, shoppingList);
         
-        return finalStoreResult;
+            return finalStoreResult;
+            
+        } catch (RuntimeException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());       
+        }
+        
     }
     @GetMapping("/product-types")
     public List<String> getProductType(){
@@ -50,7 +58,7 @@ public class ShopController {
             .orElseThrow(() -> new ResponseStatusException(
                 HttpStatus.NOT_FOUND, "Product type not found"
             ));
-        return pt.getBrands().stream().map(Brand::getName).toList();
+        return pt.getBrands().stream().map(Brand::getName).sorted().toList();
     }
     
     @GetMapping("/{code}/product-alias")
@@ -61,27 +69,9 @@ public class ShopController {
             ));
         return pt.getAliases().stream().map(ProductTypeAlias::getName).toList();
     }
-    // @GetMapping("/search")
-    // public List<Product> searchProducts(
-    //         @RequestParam String city,
-    //         @RequestParam String keyword
-    // ) {
-    //     List<Product> products = shoppingService.searchProductsByCityAndKeyword(city, keyword);
-
-    //     // Convert string prices to BigDecimal if necessary
-    //     return products.stream().map(p -> {
-    //         try {
-    //             if (p.getPrice() == null) p.setPrice("0");
-    //         } catch (Exception e) {
-    //             p.setPrice("0");
-    //         }
-    //         try {
-    //             if (p.getPrice_promotion() == null) p.setPrice_promotion(null);
-    //         } catch (Exception e) {
-    //             p.setPrice_promotion(null);
-    //         }
-    //         return p;
-    //     }).collect(Collectors.toList());
-    // }
+    @GetMapping("/products")
+    public List<String> getProductsByBrandAndCategory(@RequestParam String category,@RequestParam String brand){
+        return shoppingService.getProductsByBrandAndCategory(category, brand);
+    }
 }
 
