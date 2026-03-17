@@ -3,6 +3,7 @@ import csv
 import os
 import sys
 import psycopg2
+from psycopg2.extras import execute_values
 
 DB_CONFIG = {
     "dbname": "mydatabase",
@@ -14,6 +15,7 @@ DB_CONFIG = {
 TABLE = "product"
 COLUMNS = ["city", "store", "product_name", "code", "category", "price", "price_promotion"]
 CSV_DIR = "/storesData/stores"
+BATCH_SIZE = 10000  # Number of rows to insert in a single query
 
 def detect_delimiter(filepath):
     """Detect delimiter by trying to parse header and checking column count."""
@@ -21,20 +23,26 @@ def detect_delimiter(filepath):
         header = f.readline()
     
     for delim in [',', ';', '\t']:
-        # Parse the header line with this delimiter
         reader = csv.reader([header], delimiter=delim, quotechar='"')
-        cols = next(reader)
-        if len(cols) == len(COLUMNS):
-            return delim
+        try:
+            cols = next(reader)
+            if len(cols) == len(COLUMNS):
+                return delim
+        except StopIteration:
+            continue
     
     # Fallback: pick whichever gives closest column count
     best_delim, best_diff = ',', float('inf')
     for delim in [',', ';', '\t']:
         reader = csv.reader([header], delimiter=delim, quotechar='"')
-        cols = next(reader)
-        diff = abs(len(cols) - len(COLUMNS))
-        if diff < best_diff:
-            best_diff, best_delim = diff, delim
+        try:
+            cols = next(reader)
+            diff = abs(len(cols) - len(COLUMNS))
+            if diff < best_diff:
+                best_diff, best_delim = diff, delim
+        except StopIteration:
+            continue
+            
     return best_delim
 
 def import_csv(conn, filepath):
@@ -43,8 +51,13 @@ def import_csv(conn, filepath):
     with open(filepath, 'r', encoding='utf-8') as f:
         reader = csv.reader(f, delimiter=delim, quotechar='"', skipinitialspace=True)
         next(reader)  # skip header
+        
         skipped = 0
         rows_inserted = 0
+        batch = []
+
+        # Prepare the base query for execute_values
+        query = f"INSERT INTO {TABLE} ({','.join(COLUMNS)}) VALUES %s"
 
         with conn.cursor() as cur:
             for i, row in enumerate(reader, start=2):
@@ -56,11 +69,18 @@ def import_csv(conn, filepath):
                     skipped += 1
                     continue
 
-                cur.execute(
-                    f"INSERT INTO {TABLE} ({','.join(COLUMNS)}) VALUES ({','.join(['%s'] * len(COLUMNS))})",
-                    row
-                )
-                rows_inserted += 1
+                batch.append(row)
+
+                # Insert when batch size is reached to manage memory
+                if len(batch) >= BATCH_SIZE:
+                    execute_values(cur, query, batch, page_size=BATCH_SIZE)
+                    rows_inserted += len(batch)
+                    batch.clear()  # Empty the list for the next batch
+
+            # Insert any remaining rows in the final batch
+            if batch:
+                execute_values(cur, query, batch, page_size=BATCH_SIZE)
+                rows_inserted += len(batch)
 
     print(f"  Inserted {rows_inserted} rows" + (f", skipped {skipped} malformed" if skipped else ""))
 

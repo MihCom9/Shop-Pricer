@@ -1,4 +1,4 @@
-package com.example.demo.service;
+package com.example.demo.service.shopping;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -22,13 +23,13 @@ import com.example.demo.data.Product;
 import com.example.demo.data.ProductType;
 import com.example.demo.data.repository.ProductRepository;
 import com.example.demo.data.repository.ProductTypeRepository;
-import com.example.demo.model.StoreResult;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 
 import com.example.demo.model.SearchProduct;
+import com.example.demo.model.Shopping.StoreResult;
 
 @Service
 public class ShoppingService {
@@ -41,7 +42,7 @@ public class ShoppingService {
         this.productRepository = productRepository;
         this.productTypeRepository = productTypeRepository;
     }
-    private boolean saveStoreResultsInFile(Map<String, Map<String, BigDecimal>> storeProductPrices, int compareSize){
+    private boolean saveStoreResultsInFile(Map<String, Map<Product, BigDecimal>> storeProductPrices, int compareSize){
         String filePath = "/logs/appStoreResults.log";
          try {
         File file = new File(filePath);
@@ -54,9 +55,9 @@ public class ShoppingService {
 
         // Use try-with-resources to safely write to file
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            for (Map.Entry<String, Map<String, BigDecimal>> storeEntry : storeProductPrices.entrySet()) {
+            for (Map.Entry<String, Map<Product, BigDecimal>> storeEntry : storeProductPrices.entrySet()) {
                 String store = storeEntry.getKey();
-                Map<String, BigDecimal> products = storeEntry.getValue();
+                Map<Product, BigDecimal> products = storeEntry.getValue();
                 writer.write(String.format("Store %s has %d/%d products", store,products.size(),compareSize));
                 writer.write("\n");
             }
@@ -88,7 +89,7 @@ public class ShoppingService {
     }
     public List<StoreResult> findCheapestStore(String city, List<SearchProduct> shoppingList) {
 
-        Map<String, Map<String, BigDecimal>> storeProductPrices = new HashMap<>();
+        Map<String, Map<Product, BigDecimal>> storeProductPrices = new HashMap<>();
 
         for (SearchProduct sp : shoppingList) {
 
@@ -116,7 +117,7 @@ public class ShoppingService {
                             Product::getStore,
                             p -> p,
                             (p1, p2) -> p1.getEffectivePrice().compareTo(p2.getEffectivePrice()) <= 0 ? p1 : p2
-                    ));
+                ));
 
             for (Map.Entry<String, Product> entry : cheapestPerStore.entrySet()) {
                 Product product = entry.getValue();
@@ -128,7 +129,7 @@ public class ShoppingService {
 
                 storeProductPrices
                         .computeIfAbsent(entry.getKey(), k -> new HashMap<>())
-                        .put(product.getProductName(), cost);
+                        .put(product, cost);
 
                 // only print if price is 0
                 if (cost.compareTo(BigDecimal.ZERO) == 0) {
@@ -150,7 +151,7 @@ public class ShoppingService {
         // Print stores that are skipped (don't have all products)
         int goodStores = 0, badStores = 0;
 
-        for (Map.Entry<String, Map<String, BigDecimal>> e : storeProductPrices.entrySet()) {
+        for (Map.Entry<String, Map<Product, BigDecimal>> e : storeProductPrices.entrySet()) {
             String store = e.getKey();
             int productsFound = e.getValue().size();
             int totalRequested = shoppingList.size();
@@ -173,13 +174,16 @@ public class ShoppingService {
         List<StoreResult> cheapestStores= storeTotals.entrySet()
                 .stream()
                 .sorted(Map.Entry.comparingByValue())
-                .limit(10)
-                .map(e -> new StoreResult(e.getKey(), e.getValue())).toList();
+                .limit(40)
+                .map(e -> new StoreResult(e.getKey(), new ArrayList<>(storeProductPrices.get(e.getKey()).keySet()) ,e.getValue())).toList();
         if (cheapestStores.isEmpty()) {
             throw new NoSuchElementException("Store not found");
         }
-        Map<String, BigDecimal> cheapestStoreProducts = storeProductPrices.get(cheapestStores.get(0).getStore());
-        cheapestStoreProducts.forEach((product, price) -> System.out.printf("Product: %s, Price: %.2f\n", product, price.floatValue()));
+        for (int i = 0; i < 10; i++) {
+            System.out.printf("Store name: %s\n",cheapestStores.get(i).getStore());
+            Map<Product, BigDecimal> cheapestStoreProducts = storeProductPrices.get(cheapestStores.get(i).getStore());
+            cheapestStoreProducts.forEach((product, price) -> System.out.printf("Product: %s, Price: %.2f, Real Price: %s, Promotion Price: %s\n", product.getProductName(), price.floatValue(), product.getPrice(), product.getPricePromotion()));
+        }
         return cheapestStores;
     }
     void normalizeProductName(List<String> productNames){
@@ -199,47 +203,5 @@ public class ShoppingService {
             System.out.println(productNames.get(i));
         }
     }
-    @Transactional
-    public List<String> getProductsByBrandAndCategory(String category, String brand){
-        ProductType pt= productTypeRepository.findByProductNameIgnoreCase(category)
-        .orElseThrow(() -> new RuntimeException("Product category name not found"));
-        entityManager.createNativeQuery(
-            "SET LOCAL pg_trgm.similarity_threshold = 0.8"
-        ).executeUpdate();
-        List<String> product_names=productRepository.findMatchingProductsBetter(pt.getCode().toString(), brand);
-        // products.stream().forEach(System.out::println);
-        product_names.stream().forEach(a -> System.out.println(a));
-        normalizeProductName(product_names);
-        System.out.println();
-        return product_names;
-    }
-    
-    // public List<Product> searchProductsByCityAndKeyword(String city, String keyword) {
-    // List<Product> products = productRepository.searchProductsByCityAndKeyword(city, keyword);
-
-    // // Convert string prices to BigDecimal safely
-    // return products.stream().map(p -> {
-    //     try {
-    //         if (p.getPrice() != null) {
-    //             p.setPrice(new BigDecimal(p.getPrice().toString()));
-    //         } else {
-    //             p.setPrice(null);
-    //         }
-    //     } catch (Exception e) {
-    //         p.setPrice(null);
-    //     }
-
-    //     try {
-    //         if (p.getPrice_promotion() != null) {
-    //             p.setPrice_promotion(new BigDecimal(p.getPrice_promotion().toString()));
-    //         } else {
-    //             p.setPrice_promotion(null);
-    //         }
-    //     } catch (Exception e) {
-    //         p.setPrice_promotion(null);
-    //     }
-    //     return p;
-    // }).collect(Collectors.toList());
-    // }
 }
 
