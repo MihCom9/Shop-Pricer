@@ -8,8 +8,8 @@ import com.example.demo.data.repository.BrandRepository;
 import com.example.demo.data.repository.ProductRepository;
 import com.example.demo.data.repository.ProductTypeRepository;
 import com.example.demo.model.SearchProduct;
-import com.example.demo.model.StoreResult;
-import com.example.demo.service.ShoppingService;
+import com.example.demo.model.Shopping.StoreResult;
+import com.example.demo.service.shopping.ShoppingService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -68,10 +68,6 @@ public class ShopController {
                 HttpStatus.NOT_FOUND, "Product type not found"
             ));
         return pt.getAliases().stream().map(ProductTypeAlias::getName).toList();
-    }
-    @GetMapping("/products")
-    public List<String> getProductsByBrandAndCategory(@RequestParam String category,@RequestParam String brand){
-        return shoppingService.getProductsByBrandAndCategory(category, brand);
     }
 }
 

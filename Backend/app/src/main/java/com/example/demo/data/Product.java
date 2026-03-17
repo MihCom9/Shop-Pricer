@@ -42,6 +42,15 @@ public class Product {
         this.price=price;
         this.price_promotion=price_promotion;
     }
+    public Product(Product other){
+        city= other.city;
+        store= other.store;
+        name = other.name;
+        code= other.code;
+        category=other.category;
+        price= other.price;
+        price_promotion= other.price_promotion;
+    }
 
     public void setId(Long id) {
         this.id = id;
@@ -91,11 +100,11 @@ public class Product {
         this.price = price;
     }
 
-    public String getPrice_promotion() {
+    public String getPricePromotion() {
         return price_promotion;
     }
 
-    public void setPrice_promotion(String price_promotion) {
+    public void setPricePromotion(String price_promotion) {
         this.price_promotion = price_promotion;
     }
     public BigDecimal getPriceAsDecimal() {
