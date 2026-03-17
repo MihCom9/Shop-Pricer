@@ -1,16 +1,25 @@
-import { BrowserRouter as Router, Routes, Route} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useState, useEffect } from "react";
 import './App.css';
-import Navbar from './Components/Navbar/Navbar';
+import Navbar from './components/Navbar/Navbar';
 import Home from "./pages/Home/Home";
 import Login from "./pages/Login/Login";
 import SearchPage from "./pages/Search/SearchPage";
 
 function App() {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-   <Router>
+    <Router>
       <div>
-        <header className="max-w-2xl lg:max-w-4xl xl:max-w-6xl mx-auto">
-          <Navbar /> 
+        <header className={`sticky top-0 z-50 bg-gray-50 transition-all duration-200 ${scrolled ? "py-0" : "py-2"}`}>
+          <Navbar />
         </header>
         <main>
           <Routes>
@@ -20,7 +29,7 @@ function App() {
           </Routes>
         </main>
       </div>
-   </Router>
+    </Router>
   );
 }
 

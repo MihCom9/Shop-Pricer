@@ -2,7 +2,8 @@
     import { ShoppingCart, Plus, Search } from 'lucide-react';
     import React, { useState, useEffect } from 'react';
     import "./SearchPage.css";
-import ProductDisplay from "./ProductDysplay/ProductDisplay";
+import ProductDisplay from "./ProductDisplay/ProductDisplay";
+import StoreResults from "./StoreResults/StoreResults";
 
     export default function SearchPage() {
         const [searchLoading, setSearchLoading] = useState(false);
@@ -77,7 +78,7 @@ import ProductDisplay from "./ProductDysplay/ProductDisplay";
                     </div>
                     {/* Find Cheapest Button */}
                     <button onClick={findCheapest} disabled={searchLoading}
-                    className="w-full bg-stone-800 hover:bg-stone-700 disabled:bg-stone-300 text-white py-4 rounded-xl mt-2 transition-all flex items-center justify-center gap-2 font-medium"
+                    className="w-full bg-stone-800 hover:bg-stone-700 disabled:bg-stone-300 text-white py-4 rounded-xl mt-4 transition-all flex items-center justify-center gap-2 font-medium"
                     >
                         {searchLoading ? (
                             <>
@@ -93,17 +94,21 @@ import ProductDisplay from "./ProductDysplay/ProductDisplay";
 
                     {/* Result */}
                         {result && (
-                            <div className={`bg-white border rounded-xl p-6 mt-2 ${result.error ? 'border-red-200' : 'border-stone-200'}`}>
-                            {result.error ? (
-                                <p className="text-red-400 text-sm">{result.error}</p>
-                            ) : (
-                                <>
-                                <p className="text-sm text-stone-400 mb-2">Best store found</p>
-                                <pre className="text-stone-700 text-sm whitespace-pre-wrap">
-                                    {JSON.stringify(result, null, 2)}
-                                </pre>
-                                </>
-                            )}
+                            <div className="mt-2">
+                                {/* <div className={`bg-white border rounded-xl p-6 mt-2 ${result.error ? 'border-red-200' : 'border-stone-200'}`}>
+                                {result.error ? (
+                                    <p className="text-red-400 text-sm">{result.error}</p>
+                                ) : (
+                                    <>
+                                    <p className="text-sm text-stone-400 mb-2">Best store found</p>
+                                    <pre className="text-stone-700 text-sm whitespace-pre-wrap">
+                                        {JSON.stringify(result, null, 2)}
+                                    </pre>
+                                    </>
+                                )}
+                                
+                                </div> */}
+                                <StoreResults results={result}/>
                             </div>
                         )}
                 </div>
