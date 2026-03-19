@@ -1,10 +1,7 @@
 package com.example.demo.controllers;
 
-import com.example.demo.data.Brand;
 import com.example.demo.data.Product;
 import com.example.demo.data.ProductType;
-import com.example.demo.data.ProductTypeAlias;
-import com.example.demo.data.repository.BrandRepository;
 import com.example.demo.data.repository.ProductRepository;
 import com.example.demo.data.repository.ProductTypeRepository;
 import com.example.demo.model.SearchProduct;
@@ -51,23 +48,6 @@ public class ShopController {
     public List<String> getProductType(){
         List<String> product_types= productTypeRepository.findAllProductNames();
         return product_types;
-    }
-    @GetMapping("/product-type/brands")
-    public List<String> getBrandsByProductType(@RequestParam String productName) {
-        ProductType pt = productTypeRepository.findByProductNameIgnoreCase(productName)
-            .orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND, "Product type not found"
-            ));
-        return pt.getBrands().stream().map(Brand::getName).sorted().toList();
-    }
-    
-    @GetMapping("/{code}/product-alias")
-    public List<String> getProductAliasByProductType(@PathVariable String productName) {
-        ProductType pt = productTypeRepository.findByProductNameIgnoreCase(productName)
-            .orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND, "Product type not found"
-            ));
-        return pt.getAliases().stream().map(ProductTypeAlias::getName).toList();
     }
 }
 

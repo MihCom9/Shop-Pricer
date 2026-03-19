@@ -15,7 +15,7 @@ DB_CONFIG = {
 TABLE = "product"
 COLUMNS = ["city", "store", "product_name", "code", "category", "price", "price_promotion"]
 CSV_DIR = "/storesData/stores"
-BATCH_SIZE = 10000  # Number of rows to insert in a single query
+BATCH_SIZE = 500  # Number of rows to insert in a single query
 
 def detect_delimiter(filepath):
     """Detect delimiter by trying to parse header and checking column count."""

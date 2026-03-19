@@ -20,14 +20,6 @@ public interface ProductTypeRepository extends JpaRepository<ProductType, Long> 
     @Query("select pt.productName from ProductType pt")
     List<String> findAllProductNames();
 
-    @Query("""
-    select distinct pt
-    from ProductType pt
-    left join fetch pt.aliases
-    left join fetch pt.brands
-    """)
-    List<ProductType> findAllWithAliasesAndBrands();
-
     void deleteByCode(Integer code);
 
     void deleteByProductNameIgnoreCase(String productName);
