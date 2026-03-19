@@ -70,7 +70,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query(value = """ 
         WITH distinct_products AS (
             SELECT DISTINCT product_name
-            FROM product_test
+            FROM product
             WHERE category = :category
             AND LOWER(product_name) LIKE LOWER(CONCAT('%', :brand, '%'))
         ),
@@ -126,7 +126,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query(value = """
     WITH base AS MATERIALIZED (
         SELECT *
-        FROM product_test
+        FROM product
         WHERE city = :city
         AND category = :category
     ),
@@ -175,7 +175,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @Query(value = """
         SELECT *
-        FROM product_test
+        FROM product
         WHERE city = :city
         AND category = :category
     """, nativeQuery = true)

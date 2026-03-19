@@ -13,7 +13,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
 @Entity
-@Table(name = "product_test")
+@Table(name = "product")
 public class Product {
 
     @Id

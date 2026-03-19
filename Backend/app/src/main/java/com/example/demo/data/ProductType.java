@@ -29,15 +29,6 @@ public class ProductType {
     @Column(nullable = false, unique = true, length = 255)
     private String productName;
 
-    @OneToMany(mappedBy = "productType", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
-    private Set<ProductTypeAlias> aliases;
-
-
-    @OneToMany(mappedBy = "productType", fetch = FetchType.LAZY, cascade = CascadeType.ALL,orphanRemoval = true)
-    @JsonManagedReference
-    private Set<Brand> brands;
-
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -67,45 +58,4 @@ public class ProductType {
     public void setProductName(String productName) {
         this.productName = productName;
     }
-
-    public Set<Brand> getBrands() {
-        return brands;
-    }
-
-    public void setBrands(Set<Brand> brands) {
-        this.brands = brands;
-    }
-
-    public Set<ProductTypeAlias> getAliases() {
-        return aliases;
-    }
-
-    public void setAliases(Set<ProductTypeAlias> aliases) {
-        this.aliases = aliases;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void addBrand(Brand brand) {
-        brands.add(brand);
-        brand.setProductType(this); // keep the relation consistent
-    }
-
-    public void removeBrand(Brand brand) {
-        brands.remove(brand);
-        brand.setProductType(null);
-    }
-    
-    public void addAlias(ProductTypeAlias alias) {
-        aliases.add(alias);
-        alias.setProductType(this); // keep the relation consistent
-    }
-
-    public void removeAlias(ProductTypeAlias alias) {
-        aliases.remove(alias);
-        alias.setProductType(null);
-    }
-
 }
