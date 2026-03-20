@@ -1,0 +1,43 @@
+name: Daily Data Sync
+
+on:
+  # Run every day at 03:00 UTC (adjust as needed)
+  schedule:
+    - cron: '0 3 * * *'
+  # Allow manual trigger from the GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  sync:
+    name: Download → Import → Deduplicate → Clean → Brands
+    runs-on: ubuntu-latest
+    timeout-minutes: 120   # the full pipeline can take 30–90 min on large datasets
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: Backend/app/requirements.txt
+
+      - name: Install Python dependencies
+        run: pip install -r Backend/app/requirements.txt
+
+      # Write the .env file from GitHub Actions secrets so the script can
+      # pick them up with python-dotenv (same variables as .env.example)
+      - name: Create .env from secrets
+        working-directory: Backend/app
+        run: |
+          cat > .env <<EOF
+          SPRING_DATASOURCE_URL=${{ secrets.SPRING_DATASOURCE_URL }}
+          SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }}
+          SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+          EOF
+
+      - name: Run data sync pipeline
+        working-directory: Backend/app
+        run: python sync_data.py
