@@ -30,10 +30,12 @@ public class Product {
     private String price_promotion;
     @Transient
     private String searchVector;
+    @Column(name = "full_store_name")
+    private String fullStoreName;
 
     protected Product() {}
 
-    public Product(String city,String store,String product_name,String code,String category,String price,String price_promotion){
+    public Product(String city,String store,String product_name,String code,String category,String price,String price_promotion, String fullStoreName){
         this.city=city;
         this.store=store;
         this.name=product_name;
@@ -41,6 +43,7 @@ public class Product {
         this.category=category;
         this.price=price;
         this.price_promotion=price_promotion;
+        this.fullStoreName=fullStoreName;
     }
     public Product(Product other){
         city= other.city;
@@ -134,5 +137,12 @@ public class Product {
         return BigDecimal.ZERO;
     }
 
+    public String getFullStoreName() {
+        return fullStoreName;
+    }
+
+    public void setFullStoreName(String fullStoreName) {
+        this.fullStoreName = fullStoreName;
+    }
     
 }
