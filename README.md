@@ -1,19 +1,173 @@
-# Introduction
+# 🛍️ Smart Shopping Platform
 
-This project is a web/mobile platform designed to help users in Bulgaria shop smarter and cheaper. The main idea is that the application automatically calculates where it is the cheapest to buy your entire shopping list. The goal of the project is to make shopping more transparent, accessible, and efficient by providing a tool that saves time, money, and effort.
+## 📌 Overview
 
-# Functionality
-- Price comparison for an entire shopping list. <br>
-The user enters their list of products, and the system automatically calculates the total price of the list across all supported supermarkets. It highlights the cheapest store and compares price differences with other stores. There is also an option to factor in the distance of stores from the user when making comparisons.
+A web and mobile platform designed to help users in Bulgaria shop smarter, faster, and cheaper.
 
-- Product search and single-item price comparison. <br>
-Allows quick product searches and price comparisons across different chains. Searches can be done by product names (e.g., “tomatoes,” “domati,” “pink tomatoes”), by units (kg, liter, piece), and with filters for brand, weight, and availability.
+The system automatically calculates the most cost-effective way to purchase an entire shopping list across multiple supermarkets. By combining price comparison, intelligent search, and optimization logic, the platform saves users **time, money, and effort**.
 
-# Future plans
-- Uploading a photo of the shopping list instead of manual entry. <br>
-Users can upload a photo of their list instead of typing it manually, along with other input methods.
+---
 
-- Price history (or similar feature).
+## ✨ Core Features
 
-- Map of nearby stores. <br>
-An interactive map showing all nearby locations and the total price for the shopping list at each store. Users can directly select the closest and cheapest store.
+### 🧾 Full Shopping List Optimization
+
+* Input your entire shopping list in seconds
+* Compare total prices across all supported supermarkets
+* Instantly identify the **cheapest store**
+* View price differences between stores
+* Optional distance-based optimization for practical decisions
+
+---
+
+### 🔎 Smart Product Search
+
+* Search products across multiple chains
+* Supports flexible queries:
+
+  * “tomatoes”, “domati”, “pink tomatoes”
+* Advanced filtering:
+
+  * ⚖️ Unit (kg, liter, piece)
+  * 🏷️ Brand
+  * 📦 Weight
+  * ✅ Availability
+
+---
+
+## 🚀 Feature Roadmap
+
+### 🔍 Search & Optimization Engine
+
+* Basic structured search (non-AI, query-based)
+* Advanced search improvements:
+
+  * Multi-store optimization (e.g., combining 2 stores)
+  * Preferred stores (user & list level)
+  * Smarter filtering and matching logic
+
+---
+
+### 👤 User Accounts & Personalization
+
+* Secure authentication (Login / Sign Up)
+* Separate flows for:
+
+  * 🧑 Users
+  * 🏢 Businesses
+* User capabilities:
+
+  * Save, edit, and reuse shopping lists
+  * Favorite frequently used lists
+* Personalized settings:
+
+  * Store preferences
+  * Product preferences
+  * Algorithm behavior tuning
+
+---
+
+### 🏪 Business Dashboard
+
+* Dedicated interface for stores:
+
+  * 📊 Product analytics & trends
+  * ❤️ Customer interest insights
+  * 📈 Visual charts and performance data
+* Store management tools:
+
+  * Update product prices
+  * Manage listings
+* Partnership & contact page
+
+---
+
+### ⚡ Performance & Scalability
+
+* Optimize database queries
+* Identify and remove bottlenecks
+* Refactor code for:
+
+  * Speed
+  * Maintainability
+  * Scalability
+
+---
+
+### 💸 Promotions & Smart Suggestions
+
+* Dedicated promotions page:
+
+  * Browse deals across stores
+  * Add directly to shopping list
+* Intelligent recommendations:
+
+  * Suggest items from the same store
+  * Suggest nearby alternatives
+  * Improve over time with usage
+
+---
+
+### 🤖 AI-Powered Experience
+
+* Budget planning assistance
+* Smart shopping suggestions
+* Recipe-based shopping lists
+* Adaptive recommendations based on behavior
+
+---
+
+### 🎯 User Experience & Onboarding
+
+* Clean and intuitive homepage
+* Built-in user guide
+* Simple onboarding flow for new users
+
+---
+
+## 🧩 Optional Features
+
+* 📷 **Scan Shopping Lists**
+  Upload a handwritten list → AI extracts items automatically
+
+* 🗺️ **Interactive Store Map**
+  Visualize nearby stores after price comparison
+  Combine **distance + price** for best decisions
+
+---
+
+## 💰 Monetization Strategy
+
+### 🥇 Sponsored Promotions
+
+* Paid product placements in the promotions page
+* Primary revenue stream
+
+---
+
+### 💎 AI Premium Features
+
+* Freemium model:
+
+  * Free basic features
+  * Paid advanced AI tools
+
+---
+
+### 🏢 Business Subscriptions
+
+* Freemium for stores:
+
+  * Free → basic analytics
+  * Paid → advanced insights & tools
+* High long-term revenue potential
+
+---
+
+## 🌍 Vision
+
+To build a **complete smart shopping assistant** that not only finds the cheapest options, but also helps users **plan, optimize, and simplify** their entire shopping experience.
+
+---
+
+✨ *Shop smarter. Spend less. Stress less.*
