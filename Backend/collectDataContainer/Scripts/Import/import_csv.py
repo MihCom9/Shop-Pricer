@@ -3,6 +3,7 @@ import csv
 import os
 import sys
 import psycopg2
+import re
 from psycopg2.extras import execute_values
 
 DB_CONFIG = {
@@ -13,7 +14,7 @@ DB_CONFIG = {
 }
 
 TABLE = "product"
-COLUMNS = ["city", "store", "product_name", "code", "category", "price", "price_promotion"]
+COLUMNS = ["city", "store", "product_name", "code", "category", "price", "price_promotion","full_store_name"]
 CSV_DIR = "/storesData/stores"
 BATCH_SIZE = 500  # Number of rows to insert in a single query
 
@@ -45,13 +46,14 @@ def detect_delimiter(filepath):
             
     return best_delim
 
-def import_csv(conn, filepath):
+def import_csv(conn, filepath, fname):
     delim = detect_delimiter(filepath)
     
     with open(filepath, 'r', encoding='utf-8') as f:
         reader = csv.reader(f, delimiter=delim, quotechar='"', skipinitialspace=True)
         next(reader)  # skip header
-        
+        full_store_name = re.sub(r'[(_].*$', '', fname.replace('.csv', '')).strip()
+        print(f"Store name is {full_store_name}!")
         skipped = 0
         rows_inserted = 0
         batch = []
@@ -64,10 +66,12 @@ def import_csv(conn, filepath):
                 # Strip surrounding whitespace from each field
                 row = [field.strip() for field in row]
                 
-                if len(row) != len(COLUMNS):
+                if len(row) != len(COLUMNS)-1:
                     print(f"  Line {i}: skipping malformed row ({len(row)} cols): {row}")
                     skipped += 1
                     continue
+
+                row = row + [full_store_name]
 
                 batch.append(row)
 
@@ -101,7 +105,7 @@ def main():
             filepath = os.path.join(CSV_DIR, fname)
             print(f"Importing {filepath}")
             try:
-                import_csv(conn, filepath)
+                import_csv(conn, filepath, fname)
                 conn.commit()
                 num += 1
             except Exception as e:

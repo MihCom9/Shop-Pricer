@@ -21,7 +21,7 @@ function App() {
         <header className={`sticky top-0 z-50 bg-gray-50 transition-all duration-200 ${scrolled ? "py-0" : "py-2"}`}>
           <Navbar />
         </header>
-        <main>
+        <main className="">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/search" element={<SearchPage />} />
