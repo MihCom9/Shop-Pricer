@@ -40,7 +40,7 @@ const StoreResults = ({ results }) => {
                 <div>
                   <div className="flex items-center gap-2">
                     <p className="font-semibold text-sm text-stone-800">
-                      {store.store.split(" ").slice(0, 2).join(" ")}
+                      {store.storeName}
                     </p>
                     {isBest && (
                       <span className="bg-stone-800 text-white font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ fontSize: "9px" }}>
