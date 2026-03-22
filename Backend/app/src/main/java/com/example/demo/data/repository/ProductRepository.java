@@ -21,8 +21,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
         SELECT
             pt.id,
             c.ekatte                     AS city,
-            s.name                       AS store,
-            s.name                       AS full_store_name,
+            s.location                       AS store,
+            s.location                       AS full_store_name,
             prod.name                    AS product_name,
             prod.code                    AS code,
             cat.cid::text                AS category,
@@ -85,8 +85,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
         SELECT
             pt.id,
             c.ekatte                     AS city,
-            s.name                       AS store,
-            s.name                       AS full_store_name,
+            s.location                       AS store,
+            s.location                       AS full_store_name,
             prod.name                    AS product_name,
             prod.code                    AS code,
             cat.cid::text                AS category,
@@ -111,8 +111,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
         WITH base AS MATERIALIZED (
             SELECT
                 prod.name                AS productName,
-                s.name                   AS store,
-                s.name                   AS storeName,
+                s.location                   AS store,
+                s.location                   AS storeName,
                 cat.cid::text                       AS category,
                 COALESCE(cat.name, cat.cid::text)   AS categoryName,
                 trim(pt.price)           AS price,
@@ -161,12 +161,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<String> findAllCategoryIds();
 
     @Query(value = """
-        SELECT DISTINCT s.name
+        SELECT DISTINCT s.location
         FROM stores s
         JOIN product_test pt ON pt.store_id = s.id
         JOIN cities c ON c.id = pt.city_id
         WHERE c.ekatte = :city
-        ORDER BY s.name
+        ORDER BY s.location
     """, nativeQuery = true)
     List<String> findStoreNames(@Param("city") String city);
 }
