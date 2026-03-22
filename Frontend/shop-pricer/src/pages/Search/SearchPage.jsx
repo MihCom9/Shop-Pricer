@@ -111,9 +111,15 @@ export default function SearchPage({ cart, setCart }) {
                 </button>
 
                 {/* Result */}
-                    {result && (
+                    {result?.length > 0 ? (
                         <div className="mt-2">
-                            <StoreResults results={result}/>
+                            <StoreResults results={result} />
+                        </div>
+                    ) : (
+                        <div className="bg-white border border-stone-200 rounded-2xl p-16 text-center mt-4">
+                            <Search className="mx-auto text-stone-200 mb-4" size={56} />
+                            <p className="text-stone-400 text-lg">No stores found</p>
+                            <p className="text-stone-300 text-sm mt-1">Try adjusting your search or adding different products</p>
                         </div>
                     )}
             </div>
