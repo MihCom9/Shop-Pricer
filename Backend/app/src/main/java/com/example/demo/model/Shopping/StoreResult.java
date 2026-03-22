@@ -1,25 +1,27 @@
 package com.example.demo.model.Shopping;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.example.demo.data.Product;
 
 public class StoreResult {
-    private String store;
     private String storeName;
+    private List<String> locations;
     List<ProductResult> products;
     private BigDecimal totalPrice;
 
-    public StoreResult(String store,List<Product> products ,BigDecimal totalPrice) {
-        this.store = store;
+    public StoreResult(String location,String storeName,List<Product> products ,BigDecimal totalPrice) {
+        this.locations = new ArrayList<>();
+        this.locations.add(location);
         this.products = products.stream().map(ProductResult::new).toList();
         this.totalPrice = totalPrice;
-        storeName = products.get(0).getFullStoreName();
+        this.storeName = storeName;
     }
 
-    public String getStore() {
-        return store;
+    public List<String> getLocations() {
+        return locations;
     }
 
     public BigDecimal getTotalPrice() {
@@ -33,5 +35,10 @@ public class StoreResult {
     public String getStoreName() {
         return storeName;
     }
+
+    public void addLocation(String location) {
+        this.locations.add(location);
+    }
+    
 }
 

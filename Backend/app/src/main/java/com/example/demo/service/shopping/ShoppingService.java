@@ -4,15 +4,18 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.classfile.ClassFile.Option;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -170,19 +173,33 @@ public class ShoppingService {
         System.out.printf("Total good stores: %d, bad stores: %d\n", goodStores, badStores);
 
         saveStoreResultsInFile(storeProductPrices,shoppingList.size());        
-        
-        List<StoreResult> cheapestStores= storeTotals.entrySet()
-                .stream()
-                .sorted(Map.Entry.comparingByValue())
-                .limit(40)
-                .map(e -> new StoreResult(e.getKey(), new ArrayList<>(storeProductPrices.get(e.getKey()).keySet()) ,e.getValue())).toList();
+        List<StoreResult> cheapestStores = new ArrayList<>();
+        for(Map.Entry<String, BigDecimal> entry : storeTotals.entrySet()){
+            String storeLocation= entry.getKey();
+            Map<Product, BigDecimal>store=storeProductPrices.get(storeLocation);
+            String storeName = store.keySet().iterator().next().getFullStoreName();
+            Optional<StoreResult> found = cheapestStores.stream()
+            .filter(r -> r.getStoreName().equals(storeName) && r.getTotalPrice().equals(entry.getValue()))
+            .findFirst();
+            if(found.isEmpty()){
+                cheapestStores.add(new StoreResult(storeLocation,storeName,new ArrayList<>(store.keySet()),entry.getValue()));
+            }else{
+                StoreResult storeFound= found.get();
+                storeFound.addLocation(storeLocation);
+            }
+        }
+        cheapestStores.sort(Comparator.comparing(StoreResult::getTotalPrice));
         if (cheapestStores.isEmpty()) {
             throw new NoSuchElementException("Store not found");
         }
-        for (int i = 0; i < 10; i++) {
-            System.out.printf("Store name: %s\n",cheapestStores.get(i).getStore());
-            Map<Product, BigDecimal> cheapestStoreProducts = storeProductPrices.get(cheapestStores.get(i).getStore());
-            cheapestStoreProducts.forEach((product, price) -> System.out.printf("Product: %s, Price: %.2f, Real Price: %s, Promotion Price: %s\n", product.getProductName(), price.floatValue(), product.getPrice(), product.getPricePromotion()));
+        for (int i = 0; i < Math.min(10, cheapestStores.size()); i++) {
+            StoreResult sr = cheapestStores.get(i);
+            System.out.printf("Store name: %s, locations: %s\n", sr.getStoreName(), sr.getLocations());
+            
+            // use first location to look up products
+            Map<Product, BigDecimal> cheapestStoreProducts = storeProductPrices.get(sr.getLocations().get(0));
+            cheapestStoreProducts.forEach((product, price) -> 
+                System.out.printf("Product: %s, Price: %.2f\n", product.getProductName(), price.floatValue()));
         }
         return cheapestStores;
     }

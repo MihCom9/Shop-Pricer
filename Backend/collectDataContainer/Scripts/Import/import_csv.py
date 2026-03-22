@@ -53,6 +53,8 @@ def import_csv(conn, filepath, fname):
         reader = csv.reader(f, delimiter=delim, quotechar='"', skipinitialspace=True)
         next(reader)  # skip header
         full_store_name = re.sub(r'[(_].*$', '', fname.replace('.csv', '')).strip()
+        if full_store_name.lower() == "avon":
+            full_store_name = "Билла"
         print(f"Store name is {full_store_name}!")
         skipped = 0
         rows_inserted = 0
