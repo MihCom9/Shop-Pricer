@@ -8,14 +8,14 @@ const StoreResults = ({ results }) => {
   return (
     <div className="flex flex-col gap-2" style={{ fontFamily: "Georgia, serif" }}>
       {results.map((store) => {
-        const isOpen = openStore === store.store;
+        const isOpen = openStore === (store.storeName+store.locations[0]);
         const isBest = store.totalPrice === minPrice;
         const saving = isBest ? null : (store.totalPrice - minPrice).toFixed(2);
 
         return (
           <div
             key={store.store}
-            onClick={() => setOpenStore(isOpen ? null : store.store)}
+            onClick={() => setOpenStore(isOpen ? null : (store.storeName+store.locations[0]))}
             className={`
               rounded-2xl cursor-pointer transition-all duration-300 overflow-hidden bg-white
               ${isOpen
@@ -130,11 +130,22 @@ const StoreResults = ({ results }) => {
                 </div>
 
                 {/* Location footer */}
-                <div className="flex items-center gap-1.5 pt-3 mt-1 border-t border-stone-100">
-                  <MapPin size={13} className="text-stone-300 flex-shrink-0" />
-                  <p className="text-xs text-stone-400">{store.store}</p>
-                </div>
-              </div>
+                    <div className="flex flex-col gap-1.5 pt-3 mt-1 border-t border-stone-100">
+                      {store.locations.slice(0, 2).map((location, idx) => (
+                        <div key={location} className="flex flex-row items-center gap-1.5">
+                          <MapPin size={13} className="text-stone-300 flex-shrink-0" />
+                          <span className="text-xs text-stone-400 bg-stone-50 border border-stone-200 rounded-full px-2 py-0.5">
+                            {location}
+                          </span>
+                          {idx === 1 && store.locations.length > 2 && (
+                            <span className="text-xs text-stone-400 bg-stone-50 border border-stone-200 rounded-full px-2 py-0.5">
+                              +{store.locations.length - 2} more
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
             )}
           </div>
         );
