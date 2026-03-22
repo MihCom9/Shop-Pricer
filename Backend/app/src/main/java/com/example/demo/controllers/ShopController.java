@@ -1,10 +1,8 @@
 package com.example.demo.controllers;
 
-import com.example.demo.data.Product;
-import com.example.demo.data.ProductType;
 import com.example.demo.data.repository.ProductRepository;
-import com.example.demo.data.repository.ProductTypeRepository;
 import com.example.demo.model.SearchProduct;
+import com.example.demo.model.Shopping.PromotionItem;
 import com.example.demo.model.Shopping.StoreResult;
 import com.example.demo.service.shopping.ShoppingService;
 
@@ -20,12 +18,12 @@ import java.util.List;
 public class ShopController {
 
     private final ShoppingService shoppingService;
-    private final ProductTypeRepository productTypeRepository;
+    private final ProductRepository productRepository;
 
     @Autowired
-    public ShopController(ShoppingService shoppingService,ProductTypeRepository productTypeRepository) {
+    public ShopController(ShoppingService shoppingService, ProductRepository productRepository) {
         this.shoppingService = shoppingService;
-        this.productTypeRepository=productTypeRepository;
+        this.productRepository = productRepository;
     }
 
     @PostMapping("/cheapest")
@@ -46,8 +44,29 @@ public class ShopController {
     }
     @GetMapping("/product-types")
     public List<String> getProductType(){
-        List<String> product_types= productTypeRepository.findAllProductNames();
-        return product_types;
+        return productRepository.findAllCategoryIds();
+    }
+
+    @GetMapping("/promotions")
+    public List<PromotionItem> getPromotions(
+            @RequestParam(defaultValue = "68134") String city,
+            @RequestParam(required = false) String store,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false, defaultValue = "") String search,
+            @RequestParam(defaultValue = "0") int minDiscount,
+            @RequestParam(defaultValue = "48") int limit,
+            @RequestParam(defaultValue = "0") int offset
+    ) {
+        try {
+            return shoppingService.getPromotions(city, store, category, search, minDiscount, limit, offset);
+        } catch (RuntimeException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    @GetMapping("/stores")
+    public List<String> getStores(@RequestParam(defaultValue = "68134") String city) {
+        return productRepository.findStoreNames(city);
     }
 }
 

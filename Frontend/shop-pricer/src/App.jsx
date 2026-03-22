@@ -5,9 +5,11 @@ import Navbar from './components/Navbar/Navbar';
 import Home from "./pages/Home/Home";
 import Login from "./pages/Login/Login";
 import SearchPage from "./pages/Search/SearchPage";
+import PromotionsPage from "./pages/Promotions/PromotionsPage";
 
 function App() {
   const [scrolled, setScrolled] = useState(false);
+  const [cart, setCart] = useState([]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -24,7 +26,8 @@ function App() {
         <main className="">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/search" element={<SearchPage />} />
+            <Route path="/search" element={<SearchPage cart={cart} setCart={setCart} />} />
+            <Route path="/promotions" element={<PromotionsPage cart={cart} setCart={setCart} />} />
             <Route path="/login" element={<Login />} />
           </Routes>
         </main>
