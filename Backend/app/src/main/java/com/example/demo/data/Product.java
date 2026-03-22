@@ -13,24 +13,23 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
 @Entity
-@Table(name = "product")
+@Table(name = "product_test")
 public class Product {
 
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
     private Long id;
     private String city;
     private String store;
-    @Column(name = "product_name")
+    @Column(name = "product_name", insertable = false, updatable = false)
     private String name;
     private String code;
     private String category;
     private String price;
-    @Column(nullable = true)
+    @Column(name = "price_promotion", nullable = true)
     private String price_promotion;
     @Transient
     private String searchVector;
-    @Column(name = "full_store_name")
+    @Column(name = "full_store_name", insertable = false, updatable = false)
     private String fullStoreName;
 
     protected Product() {}

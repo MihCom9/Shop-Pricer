@@ -30,6 +30,16 @@ export default function Navbar() {
               Shop
             </NavLink>
           </li>
+          <li>
+            <NavLink
+              to="/promotions"
+              className={({ isActive }) =>
+                `text-sm font-medium transition-colors ${isActive ? "text-gray-900" : "text-gray-400 hover:text-gray-700"}`
+              }
+            >
+              Promotions
+            </NavLink>
+          </li>
         </ul>
         <NavLink
           to="/login"

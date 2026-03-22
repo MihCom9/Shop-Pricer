@@ -16,6 +16,7 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,8 @@ import com.example.demo.data.Product;
 import com.example.demo.data.ProductType;
 import com.example.demo.data.repository.ProductRepository;
 import com.example.demo.data.repository.ProductTypeRepository;
+import com.example.demo.data.repository.PromotionProjection;
+import com.example.demo.model.Shopping.PromotionItem;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -186,6 +189,30 @@ public class ShoppingService {
         }
         return cheapestStores;
     }
+    public List<PromotionItem> getPromotions(String city, String store, String category, String search, int minDiscount, int limit, int offset) {
+        List<PromotionProjection> rows = productRepository.findPromotions(
+                city,
+                (store != null && !store.isBlank()) ? store : null,
+                (category != null && !category.isBlank()) ? category : null,
+                (search != null && !search.isBlank()) ? search : null,
+                minDiscount,
+                limit,
+                offset
+        );
+        return rows.stream()
+                .flatMap(r -> {
+                    try {
+                        return Stream.of(new PromotionItem(
+                                r.getProductName(), r.getStore(), r.getStoreName(),
+                                r.getCategoryName(), r.getPrice(), r.getPricePromotion()
+                        ));
+                    } catch (Exception e) {
+                        return Stream.empty();
+                    }
+                })
+                .collect(Collectors.toList());
+    }
+
     void normalizeProductName(List<String> productNames){
         for (int i = 0; i < productNames.size(); i++) {
 
