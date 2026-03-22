@@ -17,20 +17,20 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "product_type")
+@Table(name = "categories")
 public class ProductType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, name="cid")
     private Integer code;  // 1,2,3,4
 
-    @Column(nullable = false, unique = true, length = 255)
+    @Column(nullable = false, unique = true, length = 255, name="name")
     private String productName;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    // @Column(name = "created_at", nullable = false, updatable = false)
+    // private LocalDateTime createdAt = LocalDateTime.now();
 
     protected ProductType(){}
 
