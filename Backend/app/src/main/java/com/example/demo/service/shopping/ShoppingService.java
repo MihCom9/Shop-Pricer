@@ -203,7 +203,8 @@ public class ShoppingService {
                 storeFound.addLocation(storeLocation);
             }
         }
-        cheapestStores.sort(Comparator.comparing(StoreResult::getTotalPrice));
+        cheapestStores.sort(Comparator.comparing(StoreResult::hasSizeMismatch)
+                .thenComparing(StoreResult::getTotalPrice));
         if (cheapestStores.isEmpty()) {
             throw new NoSuchElementException("Store not found");
         }

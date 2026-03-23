@@ -42,6 +42,10 @@ public class StoreResult {
     public void addLocation(String location) {
         this.locations.add(location);
     }
+
+    public boolean hasSizeMismatch() {
+        return products.stream().anyMatch(ProductResult::isSizeMismatch);
+    }
     
 }
 
