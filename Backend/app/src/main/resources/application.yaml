@@ -16,16 +16,16 @@ spring:
         default_schema: public
     show-sql: true
 
-# logging:
-#   level:
-#     root: WARN
-#     com.example.demo.service.BrandExtractor: DEBUG
-#     com.example.demo: INFO
-#     org.hibernate.SQL: DEBUG
-#   file:
-#     name: ./logs/appBrand.log
-#   logback:
-#     rollingpolicy:
-#       max-file-size: 50MB
-#       max-history: 7
-#       total-size-cap: 500MB
+logging:
+  level:
+    root: WARN
+    com.example.demo.service.BrandExtractor: DEBUG
+    com.example.demo: INFO
+    org.hibernate.SQL: DEBUG
+  # file:
+  #   name: ./logs/appBrand.log
+  # logback:
+  #   rollingpolicy:
+  #     max-file-size: 50MB
+  #     max-history: 7
+  #     total-size-cap: 500MB

@@ -126,7 +126,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
               AND trim(pt.price)           ~ '^[0-9]+([,.][0-9]+)?$'
               AND trim(pt.price_promotion) ~ '^[0-9]+([,.][0-9]+)?$'
               AND (CAST(:store AS TEXT) IS NULL
-                OR s.name ILIKE CONCAT('%', :store, '%'))
+                OR s.location ILIKE CONCAT('%', :store, '%'))
               AND (CAST(:category AS TEXT) IS NULL
                 OR COALESCE(cat.name, cat.cid::text) = :category)
               AND (CAST(:search AS TEXT) IS NULL
