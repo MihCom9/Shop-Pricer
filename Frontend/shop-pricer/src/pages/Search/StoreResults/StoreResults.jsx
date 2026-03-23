@@ -1,5 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { ChevronDown, ShoppingBag, Tag, MapPin, Trophy } from "lucide-react";
+
+const mapsUrl = (query) =>
+  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 
 const StoreResults = ({ results }) => {
   const [openStore, setOpenStore] = useState(null);
@@ -105,6 +108,21 @@ const StoreResults = ({ results }) => {
                           >
                             {product.productName}
                           </p>
+                          {product.measurements ? (
+                            <span className={`text-xs px-1.5 py-0.5 rounded-md flex-shrink-0 ${
+                              product.sizeMismatch
+                                ? "bg-amber-50 text-amber-500 border border-amber-200"
+                                : product.weightBased
+                                  ? "bg-blue-50 text-blue-400 border border-blue-100"
+                                  : "bg-stone-50 text-stone-400 border border-stone-100"
+                            }`}>
+                              {product.sizeMismatch ? "~" : ""}{product.measurements}
+                            </span>
+                          ) : (
+                            <span className="text-xs px-1.5 py-0.5 rounded-md flex-shrink-0 bg-stone-50 text-stone-400 border border-stone-100">
+                              1 бр.
+                            </span>
+                          )}
                         </div>
 
                         {/* Price */}
@@ -131,17 +149,18 @@ const StoreResults = ({ results }) => {
 
                 {/* Location footer */}
                     <div className="flex flex-col gap-1.5 pt-3 mt-1 border-t border-stone-100">
-                      {store.locations.slice(0, 2).map((location, idx) => (
+                      {store.locations.map((location) => (
                         <div key={location} className="flex flex-row items-center gap-1.5">
                           <MapPin size={13} className="text-stone-300 flex-shrink-0" />
-                          <span className="text-xs text-stone-400 bg-stone-50 border border-stone-200 rounded-full px-2 py-0.5">
+                          <a
+                            href={mapsUrl(location)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={e => e.stopPropagation()}
+                            className="text-xs text-stone-400 bg-stone-50 border border-stone-200 rounded-full px-2 py-0.5 hover:border-blue-300 hover:text-blue-500 hover:bg-blue-50 transition-all"
+                          >
                             {location}
-                          </span>
-                          {idx === 1 && store.locations.length > 2 && (
-                            <span className="text-xs text-stone-400 bg-stone-50 border border-stone-200 rounded-full px-2 py-0.5">
-                              +{store.locations.length - 2} more
-                            </span>
-                          )}
+                          </a>
                         </div>
                       ))}
                     </div>

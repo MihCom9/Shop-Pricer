@@ -4,14 +4,15 @@ public class SearchProduct {
     private String name;
     private String category;
     private String brand;
-    private Integer quantity;
+    private int quantity;
+    private Double weightGrams;
 
-    public SearchProduct(String name,String category,String brand,Integer quantity){
+    public SearchProduct(String name,String category,String brand,int quantity){
         this.name=name;
         this.category=category;
         this.brand=brand;
         this.quantity=quantity;
-        
+
     }
     public String toString() {
         return "SearchProduct{" +
@@ -36,11 +37,11 @@ public class SearchProduct {
         this.category = category;
     }
 
-    public Integer getQuantity() {
+    public int getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(Integer quantity) {
+    public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
 
@@ -57,6 +58,12 @@ public class SearchProduct {
     public void setCategory(String category) {
         this.category = category;
     }
-    
+
+    public Double getWeightGrams() {
+        return weightGrams;
+    }
+    public void setWeightGrams(Double weightGrams) {
+        this.weightGrams = weightGrams;
+    }
 
 }

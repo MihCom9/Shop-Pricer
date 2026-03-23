@@ -26,6 +26,13 @@ export default function SearchPage({ cart, setCart }) {
         localStorage.setItem('shopHistory', JSON.stringify(history));
     };
 
+    const toWeightGrams = (weightAmount, weightUnit) => {
+        if (!weightUnit || !weightAmount) return null;
+        const n = parseFloat(weightAmount);
+        if (!n || n <= 0) return null;
+        return (weightUnit === 'кг' || weightUnit === 'л') ? n * 1000 : n;
+    };
+
     const findCheapest = async () => {
         if (cart.length === 0) return;
         setSearchLoading(true);
@@ -35,7 +42,8 @@ export default function SearchPage({ cart, setCart }) {
             name: item.details,
             category: item.category,
             brand: null,
-            quantity: 1
+            quantity: item.pieces ?? 1,
+            weightGrams: toWeightGrams(item.weightAmount ? String(item.weightAmount) : '', item.weightUnit)
         }));
 
         try {

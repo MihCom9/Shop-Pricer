@@ -76,26 +76,27 @@ public class ShoppingService {
             return false;
         }
     }
-    private int extractGrams(String productName) {
-        Pattern GRAMS_PATTERN = Pattern.compile("(\\d+)\\s*ГР", Pattern.CASE_INSENSITIVE);
-        Matcher matcher = GRAMS_PATTERN.matcher(productName);
-        if (matcher.find()) {
-            return Integer.parseInt(matcher.group(1));
+    private static final Pattern WEIGHT_PATTERN = Pattern.compile(
+        "(\\d+(?:[,.]\\d+)?)\\s*(КГ|ГР|Л|МЛ)",
+        Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+    );
+
+    private double extractProductWeightGrams(Product p) {
+        String text = (p.getMeasurements() != null && !p.getMeasurements().isBlank())
+            ? p.getMeasurements() + " " + p.getProductName()
+            : p.getProductName();
+        Matcher m = WEIGHT_PATTERN.matcher(text.toUpperCase());
+        if (m.find()) {
+            double val = Double.parseDouble(m.group(1).replace(",", "."));
+            String unit = m.group(2).toUpperCase();
+            return (unit.equals("КГ") || unit.equals("Л")) ? val * 1000 : val;
         }
-        return 0; // default for unit-based items
-    }
-    private int extractMilliliters(String productName) {
-        Pattern LITERS_PATTERN = Pattern.compile("(\\d+)\\s*Л", Pattern.CASE_INSENSITIVE);
-        Matcher matcher = LITERS_PATTERN.matcher(productName);
-        if (matcher.find()) {
-            int liters = Integer.parseInt(matcher.group(1));
-            return liters * 1000; // convert to ml for uniformity
-        }
-        return 0;
+        return Double.MAX_VALUE;
     }
     public List<StoreResult> findCheapestStore(String city, List<SearchProduct> shoppingList) {
 
         Map<String, Map<Product, BigDecimal>> storeProductPrices = new HashMap<>();
+        Map<Product, Double> productToRequestedGrams = new HashMap<>();
 
         for (SearchProduct sp : shoppingList) {
 
@@ -106,7 +107,7 @@ public class ShoppingService {
             System.out.print("Code: ");
             System.out.println(code);
             List<Product> products;
-            if(!namePattern.isEmpty()){
+            if(namePattern != null && !namePattern.isEmpty()){
                 products =
                     productRepository.findMatchingProductsNew(
                         city,
@@ -117,19 +118,30 @@ public class ShoppingService {
                 products =  productRepository.findMatchingProductsEmptyName(city, code.toString());
             }
 
-            // cheapest product PER STORE
-            Map<String, Product> cheapestPerStore = products.stream()
+            // Select best product PER STORE: closest size if weight requested, else cheapest
+            final Double requestedGrams = sp.getWeightGrams();
+            Map<String, Product> selectedPerStore = products.stream()
                     .collect(Collectors.toMap(
                             Product::getStore,
                             p -> p,
-                            (p1, p2) -> p1.getEffectivePrice().compareTo(p2.getEffectivePrice()) <= 0 ? p1 : p2
-                ));
+                            (p1, p2) -> {
+                                if (requestedGrams != null) {
+                                    double d1 = Math.abs(extractProductWeightGrams(p1) - requestedGrams);
+                                    double d2 = Math.abs(extractProductWeightGrams(p2) - requestedGrams);
+                                    return d1 <= d2 ? p1 : p2;
+                                }
+                                return p1.getEffectivePrice().compareTo(p2.getEffectivePrice()) <= 0 ? p1 : p2;
+                            }
+                    ));
 
-            for (Map.Entry<String, Product> entry : cheapestPerStore.entrySet()) {
+            for (Map.Entry<String, Product> entry : selectedPerStore.entrySet()) {
                 Product product = entry.getValue();
 
+                if (requestedGrams != null) {
+                    productToRequestedGrams.put(product, requestedGrams);
+                }
+
                 BigDecimal cost;
-                BigDecimal quantityBD = BigDecimal.valueOf(sp.getQuantity());
                 cost = product.getEffectivePrice()
                         .multiply(BigDecimal.valueOf(sp.getQuantity()));
 
@@ -185,7 +197,7 @@ public class ShoppingService {
             .filter(r -> r.getStoreName().equals(storeName) && r.getTotalPrice().equals(entry.getValue()))
             .findFirst();
             if(found.isEmpty()){
-                cheapestStores.add(new StoreResult(storeLocation,storeName,new ArrayList<>(store.keySet()),entry.getValue()));
+                cheapestStores.add(new StoreResult(storeLocation, storeName, new ArrayList<>(store.keySet()), entry.getValue(), productToRequestedGrams));
             }else{
                 StoreResult storeFound= found.get();
                 storeFound.addLocation(storeLocation);

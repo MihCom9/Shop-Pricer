@@ -1,4 +1,4 @@
-import { Tag, ShoppingCart, Check } from 'lucide-react';
+import { Tag, ShoppingCart, Check, MapPin } from 'lucide-react';
 import { useState } from 'react';
 
 export default function PromotionCard({ promotion, onAddToCart }) {
@@ -29,7 +29,15 @@ export default function PromotionCard({ promotion, onAddToCart }) {
       </div>
 
       {/* Store */}
-      <p className="text-xs text-stone-400 truncate">{promotion.storeName}</p>
+      <a
+        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(promotion.storeName)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-xs text-stone-400 truncate flex items-center gap-1 hover:text-blue-500 transition-colors w-fit max-w-full"
+      >
+        <MapPin size={11} className="flex-shrink-0" />
+        {promotion.storeName}
+      </a>
 
       {/* Price row */}
       <div className="flex items-baseline gap-2">

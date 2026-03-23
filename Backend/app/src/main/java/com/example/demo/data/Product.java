@@ -27,6 +27,8 @@ public class Product {
     private String price;
     @Column(name = "price_promotion", nullable = true)
     private String price_promotion;
+    @Column(name = "measurements", nullable = true)
+    private String measurements;
     @Transient
     private String searchVector;
     @Column(name = "full_store_name", insertable = false, updatable = false)
@@ -128,12 +130,16 @@ public class Product {
                 }
             }
             if (price != null && !price.isEmpty()) {
-                return new BigDecimal(price);
+                return new BigDecimal(price.trim().replace(",", "."));
             }
         } catch (NumberFormatException e) {
             // fallback
         }
         return BigDecimal.ZERO;
+    }
+
+    public String getMeasurements() {
+        return measurements;
     }
 
     public String getFullStoreName() {

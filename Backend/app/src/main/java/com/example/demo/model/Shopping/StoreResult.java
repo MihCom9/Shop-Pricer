@@ -3,6 +3,7 @@ package com.example.demo.model.Shopping;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.example.demo.data.Product;
 
@@ -12,10 +13,12 @@ public class StoreResult {
     List<ProductResult> products;
     private BigDecimal totalPrice;
 
-    public StoreResult(String location,String storeName,List<Product> products ,BigDecimal totalPrice) {
+    public StoreResult(String location, String storeName, List<Product> products, BigDecimal totalPrice, Map<Product, Double> requestedGrams) {
         this.locations = new ArrayList<>();
         this.locations.add(location);
-        this.products = products.stream().map(ProductResult::new).toList();
+        this.products = products.stream()
+            .map(p -> new ProductResult(p, requestedGrams != null ? requestedGrams.get(p) : null))
+            .toList();
         this.totalPrice = totalPrice;
         this.storeName = storeName;
     }

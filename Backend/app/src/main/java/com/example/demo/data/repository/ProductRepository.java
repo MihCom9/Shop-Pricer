@@ -27,7 +27,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             prod.code                    AS code,
             cat.cid::text                AS category,
             pt.price,
-            pt.price_promotion
+            pt.price_promotion,
+            pt.measurements
         FROM product_test pt
         JOIN products  prod ON prod.id = pt.product_id
         JOIN stores    s    ON s.id    = pt.store_id
@@ -64,7 +65,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             ) AS units_match
         FROM cleaned bf
     )
-    SELECT id, city, store, full_store_name, product_name, code, category, price, price_promotion
+    SELECT id, city, store, full_store_name, product_name, code, category, price, price_promotion, measurements
     FROM scored
     WHERE word_score > CASE
         WHEN word_count = 1 THEN 0.18
@@ -91,7 +92,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             prod.code                    AS code,
             cat.cid::text                AS category,
             pt.price,
-            pt.price_promotion
+            pt.price_promotion,
+            pt.measurements
         FROM product_test pt
         JOIN products  prod ON prod.id = pt.product_id
         JOIN stores    s    ON s.id    = pt.store_id
