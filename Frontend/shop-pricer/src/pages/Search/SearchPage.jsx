@@ -1,14 +1,28 @@
 import ProductCart from "./ProductCart/ProductCart";
 import { ShoppingCart, Plus, Search } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import "./SearchPage.css";
 import ProductDisplay from "./ProductDisplay/ProductDisplay";
 import StoreResults from "./StoreResults/StoreResults";
+import { supabase } from "../../lib/supabase";
 
 export default function SearchPage({ cart, setCart }) {
     const [searchLoading, setSearchLoading] = useState(false);
     const [result, setResult] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [preferredLocations, setPreferredLocations] = useState(new Set());
+
+    useEffect(() => {
+        supabase.auth.getUser().then(({ data }) => {
+            if (!data?.user) return;
+            supabase.from("profile_stores")
+                .select("stores(location)")
+                .eq("profile_id", data.user.id)
+                .then(({ data: rows }) => {
+                    if (rows) setPreferredLocations(new Set(rows.map(r => r.stores?.location).filter(Boolean)));
+                });
+        });
+    }, []);
 
     const saveHistoryFromResults = (results) => {
         const raw = localStorage.getItem('shopHistory');
@@ -56,6 +70,14 @@ export default function SearchPage({ cart, setCart }) {
             }
             );
             const data = await response.json();
+            if (Array.isArray(data) && preferredLocations.size > 0) {
+                data.sort((a, b) => {
+                    const aP = a.locations.some(l => preferredLocations.has(l));
+                    const bP = b.locations.some(l => preferredLocations.has(l));
+                    if (aP !== bP) return aP ? -1 : 1;
+                    return 0;
+                });
+            }
             setResult(data);
             if (Array.isArray(data)) saveHistoryFromResults(data);
         } catch (error) {

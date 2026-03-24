@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Search, Tag, SlidersHorizontal, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import PromotionCard from './PromotionCard/PromotionCard';
+import { supabase } from '../../lib/supabase';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 const PAGE_SIZE = 100;
@@ -33,6 +34,19 @@ export default function PromotionsPage({ setCart }) {
     const raw = localStorage.getItem('shopHistory');
     return raw ? JSON.parse(raw) : { stores: [], categories: [] };
   });
+  const [preferredLocations, setPreferredLocations] = useState(new Set());
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data?.user) return;
+      supabase.from("profile_stores")
+        .select("stores(location)")
+        .eq("profile_id", data.user.id)
+        .then(({ data: rows }) => {
+          if (rows) setPreferredLocations(new Set(rows.map(r => r.stores?.location).filter(Boolean)));
+        });
+    });
+  }, []);
 
   // Load dropdowns once
   useEffect(() => {
@@ -138,6 +152,7 @@ export default function PromotionsPage({ setCart }) {
   };
 
   const recommended = promotions.filter(p =>
+    preferredLocations.has(p.store) ||
     history.stores.some(s => p.storeName?.includes(s)) ||
     history.categories.includes(p.categoryName)
   );
@@ -218,7 +233,9 @@ export default function PromotionsPage({ setCart }) {
           <>
             {recommended.length > 0 && (
               <div className="mb-8">
-                <h2 className="text-sm font-semibold text-stone-500 uppercase tracking-widest mb-3">Recommended for you</h2>
+                <h2 className="text-sm font-semibold text-stone-500 uppercase tracking-widest mb-3">
+                  {preferredLocations.size > 0 ? "Preferred stores" : "Recommended for you"}
+                </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {recommended.slice(0, 6).map((p, i) => (
                     <PromotionCard key={`rec-${i}`} promotion={p} onAddToCart={handleAddToCart} />
