@@ -35,18 +35,72 @@ export default function PromotionsPage({ setCart }) {
     return raw ? JSON.parse(raw) : { stores: [], categories: [] };
   });
   const [preferredLocations, setPreferredLocations] = useState(new Set());
+  const [preferredPromos, setPreferredPromos] = useState([]);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       if (!data?.user) return;
-      supabase.from("profile_stores")
-        .select("stores(location)")
-        .eq("profile_id", data.user.id)
-        .then(({ data: rows }) => {
-          if (rows) setPreferredLocations(new Set(rows.map(r => r.stores?.location).filter(Boolean)));
-        });
+      const { data: rows } = await supabase.from("profile_stores")
+        .select("store_id").eq("profile_id", data.user.id);
+      if (!rows?.length) return;
+      const { data: storeRows } = await supabase.from("stores")
+        .select("location").in("id", rows.map(r => r.store_id));
+      if (storeRows) {
+        setPreferredLocations(new Set(storeRows.map(s => s.location).filter(Boolean)));
+      }
     });
   }, []);
+
+  // Fetch preferred store promotions separately (independent of discount ranking)
+  useEffect(() => {
+    if (preferredLocations.size === 0) {
+      setPreferredPromos([]);
+      return;
+    }
+    if (storeFilter && !preferredLocations.has(storeFilter)) {
+      setPreferredPromos([]);
+      return;
+    }
+
+    let isCancelled = false;
+
+    const fetchPreferred = async () => {
+      const storesToFetch = storeFilter && preferredLocations.has(storeFilter)
+        ? [storeFilter]
+        : [...preferredLocations];
+
+      const results = await Promise.all(
+        storesToFetch.map(loc => {
+          const qs = new URLSearchParams({ city: '68134', limit: 20, offset: 0, minDiscount });
+          if (debouncedSearch) qs.set('search', debouncedSearch);
+          if (categoryFilter) qs.set('category', categoryFilter);
+          qs.set('store', loc);
+          return fetch(`${API_BASE_URL}/promotions?${qs}`).then(r => r.json()).catch(() => []);
+        })
+      );
+
+      if (isCancelled) return;
+
+      const interleaved = [];
+      const maxLen = Math.max(...results.map(r => r.length));
+      for (let i = 0; i < maxLen; i++) {
+        for (const arr of results) {
+          if (arr[i]) interleaved.push(arr[i]);
+        }
+      }
+
+      const seen = new Set();
+      const unique = interleaved.filter(p => {
+        const k = `${p.productName}|${p.store}`;
+        return seen.has(k) ? false : seen.add(k);
+      });
+      
+      setPreferredPromos(unique);
+    };
+    fetchPreferred();
+
+    return () => { isCancelled = true; };
+  }, [preferredLocations, debouncedSearch, categoryFilter, minDiscount, storeFilter]);
 
   // Load dropdowns once
   useEffect(() => {
@@ -151,12 +205,16 @@ export default function PromotionsPage({ setCart }) {
     navigate('/search');
   };
 
-  const recommended = promotions.filter(p =>
-    preferredLocations.has(p.store) ||
-    history.stores.some(s => p.storeName?.includes(s)) ||
-    history.categories.includes(p.categoryName)
-  );
-  const recSet = new Set(recommended.map(p => `${p.productName}|${p.store}`));
+  const historyRec = preferredLocations.size === 0
+    ? promotions.filter(p =>
+        history.stores.some(s => p.storeName?.includes(s)) ||
+        history.categories.includes(p.categoryName)
+      )
+    : [];
+  const displayRecommended = preferredLocations.size > 0
+    ? (!storeFilter || preferredLocations.has(storeFilter) ? preferredPromos : [])
+    : historyRec;
+  const recSet = new Set(displayRecommended.map(p => `${p.productName}|${p.store}`));
   const other = promotions.filter(p => !recSet.has(`${p.productName}|${p.store}`));
 
   return (
@@ -231,13 +289,13 @@ export default function PromotionsPage({ setCart }) {
 
         {!loading && !error && (
           <>
-            {recommended.length > 0 && (
+            {displayRecommended.length > 0 && (
               <div className="mb-8">
                 <h2 className="text-sm font-semibold text-stone-500 uppercase tracking-widest mb-3">
                   {preferredLocations.size > 0 ? "Preferred stores" : "Recommended for you"}
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {recommended.slice(0, 6).map((p, i) => (
+                  {displayRecommended.map((p, i) => (
                     <PromotionCard key={`rec-${i}`} promotion={p} onAddToCart={handleAddToCart} />
                   ))}
                 </div>
@@ -246,7 +304,7 @@ export default function PromotionsPage({ setCart }) {
 
             <div>
               <h2 className="text-sm font-semibold text-stone-500 uppercase tracking-widest mb-3">
-                {recommended.length > 0 ? 'All promotions' : `${promotions.length}${hasMore ? '+' : ''} promotions`}
+                {displayRecommended.length > 0 ? 'All promotions' : `${promotions.length}${hasMore ? '+' : ''} promotions`}
               </h2>
               {promotions.length === 0 ? (
                 <div className="bg-white border border-stone-200 rounded-2xl p-16 text-center">
@@ -255,7 +313,7 @@ export default function PromotionsPage({ setCart }) {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {(recommended.length > 0 ? other : promotions).map((p, i) => (
+                  {(displayRecommended.length > 0 ? other : promotions).map((p, i) => (
                     <PromotionCard key={`promo-${i}`} promotion={p} onAddToCart={handleAddToCart} />
                   ))}
                 </div>

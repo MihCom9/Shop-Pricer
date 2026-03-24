@@ -1,6 +1,6 @@
 import ProductCart from "./ProductCart/ProductCart";
 import { ShoppingCart, Plus, Search } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import "./SearchPage.css";
 import ProductDisplay from "./ProductDisplay/ProductDisplay";
 import StoreResults from "./StoreResults/StoreResults";
@@ -11,16 +11,21 @@ export default function SearchPage({ cart, setCart }) {
     const [result, setResult] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [preferredLocations, setPreferredLocations] = useState(new Set());
+    const preferredLocationsRef = useRef(new Set());
 
     useEffect(() => {
-        supabase.auth.getUser().then(({ data }) => {
+        supabase.auth.getUser().then(async ({ data }) => {
             if (!data?.user) return;
-            supabase.from("profile_stores")
-                .select("stores(location)")
-                .eq("profile_id", data.user.id)
-                .then(({ data: rows }) => {
-                    if (rows) setPreferredLocations(new Set(rows.map(r => r.stores?.location).filter(Boolean)));
-                });
+            const { data: rows } = await supabase.from("profile_stores")
+                .select("store_id").eq("profile_id", data.user.id);
+            if (!rows?.length) return;
+            const { data: storeRows } = await supabase.from("stores")
+                .select("location").in("id", rows.map(r => r.store_id));
+            if (storeRows) {
+                const locs = new Set(storeRows.map(s => s.location).filter(Boolean));
+                preferredLocationsRef.current = locs;
+                setPreferredLocations(locs);
+            }
         });
     }, []);
 
@@ -70,10 +75,11 @@ export default function SearchPage({ cart, setCart }) {
             }
             );
             const data = await response.json();
-            if (Array.isArray(data) && preferredLocations.size > 0) {
+            const preferred = preferredLocationsRef.current;
+            if (Array.isArray(data) && preferred.size > 0) {
                 data.sort((a, b) => {
-                    const aP = a.locations.some(l => preferredLocations.has(l));
-                    const bP = b.locations.some(l => preferredLocations.has(l));
+                    const aP = a.locations.some(l => preferred.has(l));
+                    const bP = b.locations.some(l => preferred.has(l));
                     if (aP !== bP) return aP ? -1 : 1;
                     return 0;
                 });
@@ -143,7 +149,7 @@ export default function SearchPage({ cart, setCart }) {
                 {/* Result */}
                     {result?.length > 0 ? (
                         <div className="mt-2">
-                            <StoreResults results={result} />
+                            <StoreResults results={result} preferredLocations={preferredLocations} />
                         </div>
                     ) : (
                         <div className="bg-white border border-stone-200 rounded-2xl p-16 text-center mt-4">

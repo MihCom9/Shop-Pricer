@@ -4,7 +4,7 @@ import { ChevronDown, ShoppingBag, Tag, MapPin, Trophy } from "lucide-react";
 const mapsUrl = (query) =>
   `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 
-const StoreResults = ({ results }) => {
+const StoreResults = ({ results, preferredLocations = new Set() }) => {
   const [openStore, setOpenStore] = useState(null);
   const minPrice = Math.min(...results.map((s) => s.totalPrice));
 
@@ -14,6 +14,7 @@ const StoreResults = ({ results }) => {
         const isOpen = openStore === (store.storeName+store.locations[0]);
         const isBest = store.totalPrice === minPrice;
         const saving = isBest ? null : (store.totalPrice - minPrice).toFixed(2);
+        const isPreferred = store.locations.some(l => preferredLocations.has(l));
 
         return (
           <div
@@ -45,6 +46,11 @@ const StoreResults = ({ results }) => {
                     <p className="font-semibold text-sm text-stone-800">
                       {store.storeName}
                     </p>
+                    {isPreferred && (
+                      <span className="bg-blue-50 text-blue-500 border border-blue-200 font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ fontSize: "9px" }}>
+                        Preferred
+                      </span>
+                    )}
                     {isBest && (
                       <span className="bg-stone-800 text-white font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ fontSize: "9px" }}>
                         Best deal
