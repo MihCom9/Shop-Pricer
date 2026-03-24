@@ -110,43 +110,20 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     // ── Promotions query ──────────────────────────────────────────────────────
 
     @Query(value = """
-        WITH base AS MATERIALIZED (
-            SELECT
-                prod.name                AS productName,
-                s.location                   AS store,
-                s.location                   AS storeName,
-                cat.cid::text                       AS category,
-                COALESCE(cat.name, cat.cid::text)   AS categoryName,
-                trim(pt.price)           AS price,
-                trim(pt.price_promotion) AS pricePromotion
-            FROM product_test pt
-            JOIN products   prod  ON prod.id  = pt.product_id
-            JOIN stores     s     ON s.id     = pt.store_id
-            JOIN cities     c     ON c.id     = pt.city_id
-            JOIN categories cat   ON cat.id   = pt.category_id
-            WHERE c.ekatte = :city
-              AND trim(pt.price)           ~ '^[0-9]+([,.][0-9]+)?$'
-              AND trim(pt.price_promotion) ~ '^[0-9]+([,.][0-9]+)?$'
-              AND (CAST(:store AS TEXT) IS NULL
-                OR s.location ILIKE CONCAT('%', :store, '%'))
-              AND (CAST(:category AS TEXT) IS NULL
-                OR COALESCE(cat.name, cat.cid::text) = :category)
-              AND (CAST(:search AS TEXT) IS NULL
-                OR prod.name ILIKE CONCAT('%', :search, '%'))
-        ),
-        scored AS MATERIALIZED (
-            SELECT *,
-                CAST(REPLACE(pricePromotion, ',', '.') AS NUMERIC) AS promo_num,
-                CAST(REPLACE(price,          ',', '.') AS NUMERIC) AS price_num
-            FROM base
-        )
-        SELECT productName, store, storeName, category, categoryName, price, pricePromotion
-        FROM scored
-        WHERE promo_num > 0
-          AND price_num > 0
-          AND promo_num < price_num
-          AND (1 - promo_num / price_num) * 100 >= :minDiscount
-        ORDER BY (1 - promo_num / price_num) DESC
+        SELECT product_name   AS productName,
+               store,
+               store          AS storeName,
+               category,
+               category_name  AS categoryName,
+               price,
+               price_promotion AS pricePromotion
+        FROM promotions_view
+        WHERE city = :city
+          AND discount_pct >= :minDiscount
+          AND (CAST(:store    AS TEXT) IS NULL OR store         = :store)
+          AND (CAST(:category AS TEXT) IS NULL OR category_name = :category)
+          AND (CAST(:search   AS TEXT) IS NULL OR product_name  ILIKE CONCAT('%', :search, '%'))
+        ORDER BY discount_pct DESC
         LIMIT :limit OFFSET :offset
     """, nativeQuery = true)
     List<PromotionProjection> findPromotions(

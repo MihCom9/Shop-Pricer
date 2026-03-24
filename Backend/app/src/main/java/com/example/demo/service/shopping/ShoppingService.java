@@ -21,6 +21,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.data.Product;
@@ -219,6 +220,8 @@ public class ShoppingService {
         }
         return cheapestStores;
     }
+    @Cacheable(value = "promotions",
+               key = "#city + '|' + #store + '|' + #category + '|' + #search + '|' + #minDiscount + '|' + #limit + '|' + #offset")
     public List<PromotionItem> getPromotions(String city, String store, String category, String search, int minDiscount, int limit, int offset) {
         List<PromotionProjection> rows = productRepository.findPromotions(
                 city,

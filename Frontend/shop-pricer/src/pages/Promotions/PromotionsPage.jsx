@@ -5,7 +5,7 @@ import PromotionCard from './PromotionCard/PromotionCard';
 import { supabase } from '../../lib/supabase';
 
 const API_BASE_URL = 'http://localhost:8080/api';
-const PAGE_SIZE = 100;
+const PAGE_SIZE = 48;
 
 export default function PromotionsPage({ setCart }) {
   const navigate = useNavigate();
@@ -279,8 +279,20 @@ export default function PromotionsPage({ setCart }) {
         </div>
 
         {loading && (
-          <div className="flex items-center justify-center py-24">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-stone-800" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="bg-white border border-stone-200 rounded-2xl p-5 animate-pulse">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="h-3 bg-stone-100 rounded w-2/3" />
+                  <div className="h-5 bg-stone-100 rounded-full w-12" />
+                </div>
+                <div className="h-3 bg-stone-100 rounded w-1/2 mb-4" />
+                <div className="flex items-center justify-between">
+                  <div className="h-3 bg-stone-100 rounded w-1/3" />
+                  <div className="h-6 bg-stone-100 rounded w-1/4" />
+                </div>
+              </div>
+            ))}
           </div>
         )}
         {error && (

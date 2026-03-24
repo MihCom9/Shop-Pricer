@@ -16,14 +16,18 @@ spring:
         default_schema: public
         jdbc:
           prepare_threshold: 0
-    show-sql: true
+    show-sql: false
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=500,expireAfterWrite=15m
 
 logging:
   level:
     root: WARN
     com.example.demo.service.BrandExtractor: DEBUG
     com.example.demo: INFO
-    org.hibernate.SQL: DEBUG
+    org.hibernate.SQL: WARN
   # file:
   #   name: ./logs/appBrand.log
   # logback:
