@@ -11,10 +11,12 @@ COPY ./Scripts/Extract/getData.py .
 COPY ./Scripts/Import/importCSV.sh .
 COPY ./Scripts/runScript.sh .
 COPY ./Scripts/Import/import_csv.py .
+COPY ./.env .
 COPY ./Scheduler/crontab /etc/cron.d/python-cron
 
 RUN chmod 0644 /etc/cron.d/python-cron
 RUN chmod a+x ./importCSV.sh
 RUN chmod a+x ./runScript.sh
 
-CMD ["cron", "-f"]
+# CMD ["cron", "-f"]
+CMD ["/bin/bash", "-c", "/bin/bash /app/runScript.sh >> /logs/cron.log 2>&1"]
