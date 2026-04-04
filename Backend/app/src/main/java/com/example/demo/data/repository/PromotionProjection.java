@@ -2,7 +2,7 @@ package com.example.demo.data.repository;
 
 public interface PromotionProjection {
     String getProductName();
-    String getStore();
+    String[] getLocations();
     String getStoreName();
     String getCategory();
     String getCategoryName();

@@ -50,7 +50,7 @@ export default function Navbar() {
       <div className="flex items-center gap-8 max-w-4xl mx-auto">
         <div className="w-[20%]">
           <Link to="/" className="text-base font-bold tracking-tight text-gray-900">
-            Shop<span className="text-gray-400">-Pricer</span>
+            Shop<span className="text-gray-400">Lit</span>
           </Link>
         </div>
         <ul className="flex list-none gap-7 mr-auto">

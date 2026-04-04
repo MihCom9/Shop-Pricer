@@ -5,7 +5,7 @@ import PromotionCard from './PromotionCard/PromotionCard';
 import { supabase } from '../../lib/supabase';
 
 const API_BASE_URL = 'http://localhost:8080/api';
-const PAGE_SIZE = 48;
+const PAGE_SIZE = 40;
 
 export default function PromotionsPage({ setCart }) {
   const navigate = useNavigate();
@@ -91,7 +91,7 @@ export default function PromotionsPage({ setCart }) {
 
       const seen = new Set();
       const unique = interleaved.filter(p => {
-        const k = `${p.productName}|${p.store}`;
+        const k = `${p.productName}|${p.storeName}`;
         return seen.has(k) ? false : seen.add(k);
       });
       
@@ -214,8 +214,8 @@ export default function PromotionsPage({ setCart }) {
   const displayRecommended = preferredLocations.size > 0
     ? (!storeFilter || preferredLocations.has(storeFilter) ? preferredPromos : [])
     : historyRec;
-  const recSet = new Set(displayRecommended.map(p => `${p.productName}|${p.store}`));
-  const other = promotions.filter(p => !recSet.has(`${p.productName}|${p.store}`));
+  const recSet = new Set(displayRecommended.map(p => p.productName));
+  const other = promotions.filter(p => !recSet.has(p.productName));
 
   return (
     <div className="min-h-screen bg-stone-50 p-8" style={{ fontFamily: 'Georgia, serif' }}>

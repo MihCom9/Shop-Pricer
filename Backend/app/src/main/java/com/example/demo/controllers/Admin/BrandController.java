@@ -1,4 +1,4 @@
-package com.example.demo.controllers;
+package com.example.demo.controllers.Admin;
 
 import com.example.demo.data.ProductType;
 import com.example.demo.data.repository.ProductTypeRepository;
