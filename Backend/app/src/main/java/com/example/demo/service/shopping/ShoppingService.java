@@ -219,32 +219,7 @@ public class ShoppingService {
                 System.out.printf("Product: %s, Price: %.2f\n", product.getProductName(), price.floatValue()));
         }
         return cheapestStores;
-    }
-    @Cacheable(value = "promotions",
-               key = "#city + '|' + #store + '|' + #category + '|' + #search + '|' + #minDiscount + '|' + #limit + '|' + #offset")
-    public List<PromotionItem> getPromotions(String city, String store, String category, String search, int minDiscount, int limit, int offset) {
-        List<PromotionProjection> rows = productRepository.findPromotions(
-                city,
-                (store != null && !store.isBlank()) ? store : null,
-                (category != null && !category.isBlank()) ? category : null,
-                (search != null && !search.isBlank()) ? search : null,
-                minDiscount,
-                limit,
-                offset
-        );
-        return rows.stream()
-                .flatMap(r -> {
-                    try {
-                        return Stream.of(new PromotionItem(
-                                r.getProductName(), r.getStore(), r.getStoreName(),
-                                r.getCategoryName(), r.getPrice(), r.getPricePromotion()
-                        ));
-                    } catch (Exception e) {
-                        return Stream.empty();
-                    }
-                })
-                .collect(Collectors.toList());
-    }
+    }    
 
     void normalizeProductName(List<String> productNames){
         for (int i = 0; i < productNames.size(); i++) {

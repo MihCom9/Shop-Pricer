@@ -10,14 +10,14 @@ import com.example.demo.data.Product;
 public class StoreResult {
     private String storeName;
     private List<String> locations;
-    List<ProductResult> products;
+    List<ShoppingProduct> products;
     private BigDecimal totalPrice;
 
     public StoreResult(String location, String storeName, List<Product> products, BigDecimal totalPrice, Map<Product, Double> requestedGrams) {
         this.locations = new ArrayList<>();
         this.locations.add(location);
         this.products = products.stream()
-            .map(p -> new ProductResult(p, requestedGrams != null ? requestedGrams.get(p) : null))
+            .map(p -> new ShoppingProduct(p, requestedGrams != null ? requestedGrams.get(p) : null))
             .toList();
         this.totalPrice = totalPrice;
         this.storeName = storeName;
@@ -31,7 +31,7 @@ public class StoreResult {
         return totalPrice;
     }
 
-    public List<ProductResult> getProducts() {
+    public List<ShoppingProduct> getProducts() {
         return products;
     }
 
@@ -44,7 +44,7 @@ public class StoreResult {
     }
 
     public boolean hasSizeMismatch() {
-        return products.stream().anyMatch(ProductResult::isSizeMismatch);
+        return products.stream().anyMatch(ShoppingProduct::isSizeMismatch);
     }
     
 }

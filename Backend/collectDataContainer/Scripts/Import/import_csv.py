@@ -84,7 +84,7 @@ def process_product_name(raw: str):
         return raw, ''
     
     units = r'(МЛ|ML|Л|L|ГР|Г|G|KG|КГ|БР|мл|ml|л|гр|г|кг|kg|бр|pcs|cl|oz)'
-    percent = r'\d+[.,]\d+%'  # e.g. 3.6%, 3,5%
+    percent = r'\d+(?:[.,]\d+)?\s*%'
     
     measurements = []
 
@@ -109,7 +109,7 @@ def process_product_name(raw: str):
     result = re.sub(r'^[\s,\-~]+', '', result)
     result = re.sub(rf'\s*\d+[.,]?\d*\s*{units}\.?\s*/\s*\d+[.,]?\d*\s*{units}\.?', '', result, flags=re.IGNORECASE)
     result = re.sub(rf'\s*\d+[.,]?\d*\s*{units}\.?', '', result, flags=re.IGNORECASE)
-    result = re.sub(r'\s*\d+[.,]\d+%\s*', ' ', result)
+    result = re.sub(r'\s*\d+(?:[.,]\d+)?\s*%\s*', ' ', result)
     result = re.sub(r'[\s,&%/\-\.]+$', '', result)
     result = re.sub(r'\s{2,}', ' ', result)
 
@@ -169,8 +169,8 @@ def getProductId(cur, products, productName, code):
         return products[productName]
     
     cur.execute(
-        "INSERT INTO products (name, code) VALUES (%s, %s) RETURNING id",
-        (productName, code)
+        "INSERT INTO products (code, name) VALUES (%s, %s) RETURNING id",
+        ( code, productName)
     )
     new_id = cur.fetchone()[0]
     products[productName] = new_id  # update cache
@@ -230,7 +230,7 @@ def import_csv(conn, filepath, fname, cities, stores, store_locations, categorie
                 category_id = getCategoryId(categories, category_str)
                 store_id    = store_available(cur, store_name, stores)
                 location_id = store_location_available(cur, store_id, store_str, store_locations)
-                product_id  = getProductId(cur, products, product_name, code)
+                product_id  = getProductId(cur, products , product_name, code)
 
                 if product_id is None:
                     not_found_products += 1

@@ -21,8 +21,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
         SELECT
             pt.id,
             c.ekatte                     AS city,
-            s.location                       AS store,
-            s.location                       AS full_store_name,
+            sl.location                       AS store,
+            s.name                       AS full_store_name,
             prod.name                    AS product_name,
             prod.code                    AS code,
             cat.cid::text                AS category,
@@ -31,7 +31,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             pt.measurements
         FROM product_test pt
         JOIN products  prod ON prod.id = pt.product_id
-        JOIN stores    s    ON s.id    = pt.store_id
+        JOIN store_locations sl ON sl.id = pt.store_id
+        JOIN stores s ON s.id = sl.store_id
         JOIN cities    c    ON c.id    = pt.city_id
         JOIN categories cat ON cat.id  = pt.category_id
         WHERE c.ekatte        = :city
@@ -86,8 +87,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
         SELECT
             pt.id,
             c.ekatte                     AS city,
-            s.location                       AS store,
-            s.location                       AS full_store_name,
+            sl.location                       AS store,
+            s.name                       AS full_store_name,
             prod.name                    AS product_name,
             prod.code                    AS code,
             cat.cid::text                AS category,
@@ -96,7 +97,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             pt.measurements
         FROM product_test pt
         JOIN products  prod ON prod.id = pt.product_id
-        JOIN stores    s    ON s.id    = pt.store_id
+        JOIN store_locations sl ON sl.id = pt.store_id
+        JOIN stores s ON s.id = sl.store_id
         JOIN cities    c    ON c.id    = pt.city_id
         JOIN categories cat ON cat.id  = pt.category_id
         WHERE c.ekatte      = :city
@@ -110,22 +112,55 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     // ── Promotions query ──────────────────────────────────────────────────────
 
     @Query(value = """
-        SELECT product_name   AS productName,
-               store,
-               store          AS storeName,
-               category,
-               category_name  AS categoryName,
-               price,
-               price_promotion AS pricePromotion
-        FROM promotions_view
-        WHERE city = :city
-          AND discount_pct >= :minDiscount
-          AND (CAST(:store    AS TEXT) IS NULL OR store         = :store)
-          AND (CAST(:category AS TEXT) IS NULL OR category_name = :category)
-          AND (CAST(:search   AS TEXT) IS NULL OR product_name  ILIKE CONCAT('%', :search, '%'))
-        ORDER BY discount_pct DESC
+        WITH base AS MATERIALIZED (
+            SELECT
+                prod.name                AS productName,
+                sl.location                   AS store,
+                s.name                   AS storeName,
+                cat.cid::text                       AS category,
+                COALESCE(cat.name, cat.cid::text)   AS categoryName,
+                trim(pt.price)           AS price,
+                trim(pt.price_promotion) AS pricePromotion
+            FROM product_test pt
+            JOIN products   prod  ON prod.id  = pt.product_id
+            JOIN store_locations sl ON sl.id = pt.store_id
+            JOIN stores s ON s.id = sl.store_id
+            JOIN cities     c     ON c.id     = pt.city_id
+            JOIN categories cat   ON cat.id   = pt.category_id
+            WHERE c.ekatte = :city
+              AND trim(pt.price)           ~ '^[0-9]+([,.][0-9]+)?$'
+              AND trim(pt.price_promotion) ~ '^[0-9]+([,.][0-9]+)?$'
+              AND (CAST(:store AS TEXT) IS NULL
+                OR s.name ILIKE CONCAT('%', :store, '%'))
+              AND (CAST(:category AS TEXT) IS NULL
+                OR COALESCE(cat.name, cat.cid::text) = :category)
+              AND (CAST(:search AS TEXT) IS NULL
+                OR prod.name ILIKE CONCAT('%', :search, '%'))
+        ),
+        scored AS MATERIALIZED (
+            SELECT *,
+                CAST(REPLACE(pricePromotion, ',', '.') AS NUMERIC) AS promo_num,
+                CAST(REPLACE(price,          ',', '.') AS NUMERIC) AS price_num
+            FROM base
+        ),
+        grouped AS MATERIALIZED (
+            SELECT
+                productName, storeName, category, categoryName, price, pricePromotion,
+                array_agg(store) AS locations,
+                CAST(REPLACE(MAX(pricePromotion), ',', '.') AS NUMERIC) AS promo_num,
+                CAST(REPLACE(MAX(price),          ',', '.') AS NUMERIC) AS price_num
+            FROM scored
+            WHERE promo_num > 0
+            AND price_num > 0
+            AND promo_num < price_num
+            AND (1 - promo_num / price_num) * 100 >= :minDiscount
+            GROUP BY productName, storeName, category, categoryName, price, pricePromotion
+        )
+        SELECT productName, storeName, category, categoryName, price, pricePromotion, locations
+        FROM grouped
+        ORDER BY (1 - promo_num / price_num) DESC
         LIMIT :limit OFFSET :offset
-    """, nativeQuery = true)
+            """, nativeQuery = true)
     List<PromotionProjection> findPromotions(
             @Param("city")        String city,
             @Param("store")       String store,
@@ -140,12 +175,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<String> findAllCategoryIds();
 
     @Query(value = """
-        SELECT DISTINCT s.location
-        FROM stores s
-        JOIN product_test pt ON pt.store_id = s.id
+        SELECT DISTINCT sl.location
+        FROM store_locations sl
+        JOIN product_test pt ON pt.store_id = sl.id
         JOIN cities c ON c.id = pt.city_id
         WHERE c.ekatte = :city
-        ORDER BY s.location
+        ORDER BY sl.location
     """, nativeQuery = true)
     List<String> findStoreNames(@Param("city") String city);
 }

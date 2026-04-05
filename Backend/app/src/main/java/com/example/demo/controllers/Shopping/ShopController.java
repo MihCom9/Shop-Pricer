@@ -1,4 +1,4 @@
-package com.example.demo.controllers;
+package com.example.demo.controllers.Shopping;
 
 import com.example.demo.data.repository.ProductRepository;
 import com.example.demo.model.SearchProduct;
@@ -45,23 +45,6 @@ public class ShopController {
     @GetMapping("/product-types")
     public List<String> getProductType(){
         return productRepository.findAllCategoryIds();
-    }
-
-    @GetMapping("/promotions")
-    public List<PromotionItem> getPromotions(
-            @RequestParam(defaultValue = "68134") String city,
-            @RequestParam(required = false) String store,
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false, defaultValue = "") String search,
-            @RequestParam(defaultValue = "0") int minDiscount,
-            @RequestParam(defaultValue = "48") int limit,
-            @RequestParam(defaultValue = "0") int offset
-    ) {
-        try {
-            return shoppingService.getPromotions(city, store, category, search, minDiscount, limit, offset);
-        } catch (RuntimeException e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
-        }
     }
 
     @GetMapping("/stores")
