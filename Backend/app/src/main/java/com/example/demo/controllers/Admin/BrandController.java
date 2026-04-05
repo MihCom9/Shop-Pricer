@@ -2,8 +2,8 @@ package com.example.demo.controllers.Admin;
 
 import com.example.demo.data.ProductType;
 import com.example.demo.data.repository.ProductTypeRepository;
-import com.example.demo.model.CreateProductTypeAliasRequest;
-import com.example.demo.model.CreateProductTypeRequest;
+import com.example.demo.model.Admin.CreateProductTypeAliasRequest;
+import com.example.demo.model.Admin.CreateProductTypeRequest;
 import com.example.demo.service.shopping.BrandExtractor;
 
 import org.springframework.http.ResponseEntity;
