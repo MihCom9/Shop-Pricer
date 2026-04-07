@@ -51,5 +51,10 @@ public class ShopController {
     public List<String> getStores(@RequestParam(defaultValue = "68134") String city) {
         return productRepository.findStoreNames(city);
     }
+
+    @GetMapping("/store-locations")
+    public List<String> getStoreLocations(@RequestParam(defaultValue = "68134") String city,@RequestParam String store){
+        return productRepository.findStoreLocations(city, store);
+    }
 }
 

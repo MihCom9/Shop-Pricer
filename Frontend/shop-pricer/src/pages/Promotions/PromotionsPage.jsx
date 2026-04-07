@@ -1,19 +1,26 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Search, Tag, SlidersHorizontal, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Tag, Store } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import PromotionCard from './PromotionCard/PromotionCard';
 import { supabase } from '../../lib/supabase';
+import PromotionFilter from './PromotionFilter/PromotionFilter';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 const PAGE_SIZE = 40;
 
 export default function PromotionsPage({ setCart }) {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [search, setSearch] = useState('');
-  const [storeFilter, setStoreFilter] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [minDiscount, setMinDiscount] = useState(0);
+  const filters = {
+    search: searchParams.get('search') ?? '',
+    store: searchParams.get('store') ?? '',
+    storeLocation: searchParams.get('storeLocation') ?? '',
+    category: searchParams.get('category') ?? '',
+    minDiscount: Number(searchParams.get('minDiscount') ?? 0),
+    sort: searchParams.get('sort') ?? '',
+    show: searchParams.get('show') ?? '',
+  };
 
   const [promotions, setPromotions] = useState([]);
   const offsetRef = useRef(0);
@@ -22,13 +29,10 @@ export default function PromotionsPage({ setCart }) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
 
-  const [stores, setStores] = useState([]);
-  const [categories, setCategories] = useState([]);
-
-  const searchDebounceRef = useRef(null);
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const sentinelRef = useRef(null);
   const loadingMoreRef = useRef(false);
+
 
   const [history] = useState(() => {
     const raw = localStorage.getItem('shopHistory');
@@ -57,7 +61,7 @@ export default function PromotionsPage({ setCart }) {
       setPreferredPromos([]);
       return;
     }
-    if (storeFilter && !preferredLocations.has(storeFilter)) {
+    if (filters.store && !preferredLocations.has(filters.store)) {
       setPreferredPromos([]);
       return;
     }
@@ -65,15 +69,15 @@ export default function PromotionsPage({ setCart }) {
     let isCancelled = false;
 
     const fetchPreferred = async () => {
-      const storesToFetch = storeFilter && preferredLocations.has(storeFilter)
-        ? [storeFilter]
+      const storesToFetch = filters.store && preferredLocations.has(filters.store)
+        ? [filters.store]
         : [...preferredLocations];
 
       const results = await Promise.all(
         storesToFetch.map(loc => {
-          const qs = new URLSearchParams({ city: '68134', limit: 20, offset: 0, minDiscount });
+          const qs = new URLSearchParams({ city: '68134', limit: 20, offset: 0, minDiscount: filters.minDiscount, sort: filters.sort, show: filters.show });
           if (debouncedSearch) qs.set('search', debouncedSearch);
-          if (categoryFilter) qs.set('category', categoryFilter);
+          if (filters.category) qs.set('category', filters.category);
           qs.set('store', loc);
           return fetch(`${API_BASE_URL}/promotions?${qs}`).then(r => r.json()).catch(() => []);
         })
@@ -100,35 +104,22 @@ export default function PromotionsPage({ setCart }) {
     fetchPreferred();
 
     return () => { isCancelled = true; };
-  }, [preferredLocations, debouncedSearch, categoryFilter, minDiscount, storeFilter]);
-
-  // Load dropdowns once
-  useEffect(() => {
-    fetch(`${API_BASE_URL}/stores?city=68134`)
-      .then(r => r.json()).then(setStores).catch(() => {});
-    fetch(`${API_BASE_URL}/product-types`)
-      .then(r => r.json()).then(setCategories).catch(() => {});
-  }, []);
-
-  // Debounce search
-  useEffect(() => {
-    clearTimeout(searchDebounceRef.current);
-    searchDebounceRef.current = setTimeout(() => setDebouncedSearch(search), 400);
-    return () => clearTimeout(searchDebounceRef.current);
-  }, [search]);
+  }, [preferredLocations, debouncedSearch, filters.category, filters.minDiscount, filters.store, filters.sort, filters.show]);
 
   const buildParams = useCallback((extraOffset) => {
     const qs = new URLSearchParams({
       city: '68134',
       limit: PAGE_SIZE,
       offset: extraOffset,
-      minDiscount,
+      minDiscount: filters.minDiscount,
+      sort: filters.sort,
+      show: filters.show
     });
     if (debouncedSearch) qs.set('search', debouncedSearch);
-    if (storeFilter) qs.set('store', storeFilter);
-    if (categoryFilter) qs.set('category', categoryFilter);
+    if (filters.store) qs.set('store', filters.store);
+    if (filters.category) qs.set('category', filters.category);
     return qs;
-  }, [debouncedSearch, storeFilter, categoryFilter, minDiscount]);
+  }, [debouncedSearch, filters.store, filters.category, filters.minDiscount, filters.sort, filters.show]);
 
   // First page whenever filters change
   useEffect(() => {
@@ -152,7 +143,7 @@ export default function PromotionsPage({ setCart }) {
       }
     };
     fetchFirst();
-  }, [debouncedSearch, storeFilter, categoryFilter, minDiscount, buildParams]);
+  }, [debouncedSearch, filters.store, filters.category, filters.minDiscount, filters.sort, filters.show, buildParams]);
 
   // Load next page
   const loadMore = useCallback(async () => {
@@ -190,19 +181,30 @@ export default function PromotionsPage({ setCart }) {
     return () => observer.disconnect();
   }, [hasMore, loading, loadMore]);
 
-  const clearFilters = () => {
-    setSearch(''); setStoreFilter(''); setCategoryFilter(''); setMinDiscount(0);
-  };
-  const hasActiveFilters = search || storeFilter || categoryFilter || minDiscount > 0;
+  useEffect(() =>{
+    localStorage.setItem("lastPromotionUrl",searchParams.toString())
+  },[searchParams])
 
   const handleAddToCart = (promotion) => {
     setCart(prev => [...prev, {
       id: Date.now(),
       category: promotion.categoryName,
-      details: promotion.productName,
-      label: promotion.productName,
+      details: promotion.productName + (promotion.measurements? " "+promotion.measurements: ""),
+      label: promotion.productName + (promotion.measurements? " "+promotion.measurements: ""),
     }]);
     navigate('/search');
+  };
+
+  const updateFilter = (key, value) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (!value || value === 0) {
+        next.delete(key);        // keep the URL clean
+      } else {
+        next.set(key, value);
+      }
+      return next;
+    });
   };
 
   const historyRec = preferredLocations.size === 0
@@ -211,9 +213,10 @@ export default function PromotionsPage({ setCart }) {
         history.categories.includes(p.categoryName)
       )
     : [];
-  const displayRecommended = preferredLocations.size > 0
-    ? (!storeFilter || preferredLocations.has(storeFilter) ? preferredPromos : [])
-    : historyRec;
+  // const displayRecommended = preferredLocations.size > 0
+  //   ? (!filters.store || preferredLocations.has(filters.store) ? preferredPromos : [])
+  //   : historyRec;
+  const displayRecommended = [];
   const recSet = new Set(displayRecommended.map(p => p.productName));
   const other = promotions.filter(p => !recSet.has(p.productName));
 
@@ -222,61 +225,18 @@ export default function PromotionsPage({ setCart }) {
       <div className="max-w-5xl mx-auto">
 
         <div className="bg-white border border-stone-200 rounded-2xl shadow-sm p-8 mb-6">
-          <div className="flex items-center gap-3 mb-1">
-            <Tag size={22} className="text-red-400" />
-            <h1 className="text-3xl font-bold text-stone-800">Promotions</h1>
+          <div className="flex items-center gap-2 mb-1">
+            <Store size={26} className="text-red-400" />
+            <h1 className="text-3xl font-bold text-stone-800">Browse</h1>
           </div>
-          <p className="text-stone-400">Active deals across all stores — sorted by biggest discount</p>
+          <p className="text-stone-400">Explore products and deals across all stores</p>
         </div>
 
-        <div className="bg-white border border-stone-200 rounded-2xl shadow-sm p-5 mb-6">
-          <div className="flex items-center gap-2 mb-4">
-            <SlidersHorizontal size={15} className="text-stone-400" />
-            <span className="text-sm font-medium text-stone-600">Filters</span>
-            {hasActiveFilters && (
-              <button onClick={clearFilters} className="ml-auto text-xs text-stone-400 hover:text-stone-600 flex items-center gap-1">
-                <X size={12} /> Clear all
-              </button>
-            )}
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-300" />
-              <input
-                type="text"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search products..."
-                className="w-full pl-8 pr-3 py-2.5 text-sm rounded-xl border border-stone-200 focus:outline-none focus:border-stone-400 text-stone-700"
-              />
-            </div>
-            <select
-              value={storeFilter}
-              onChange={e => setStoreFilter(e.target.value)}
-              className="w-full px-3 py-2.5 text-sm rounded-xl border border-stone-200 focus:outline-none focus:border-stone-400 text-stone-700 bg-white"
-            >
-              <option value="">All stores</option>
-              {stores.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-            <select
-              value={categoryFilter}
-              onChange={e => setCategoryFilter(e.target.value)}
-              className="w-full px-3 py-2.5 text-sm rounded-xl border border-stone-200 focus:outline-none focus:border-stone-400 text-stone-700 bg-white"
-            >
-              <option value="">All categories</option>
-              {categories.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-stone-400 whitespace-nowrap">Min {minDiscount}% off</span>
-              <input
-                type="range" min={0} max={80} step={5}
-                value={minDiscount}
-                onChange={e => setMinDiscount(Number(e.target.value))}
-                className="w-full accent-stone-800"
-              />
-            </div>
-          </div>
-        </div>
+        {/* Filter */}
+        <PromotionFilter filters={filters} 
+            onClear={() => {setSearchParams({})}}
+            onChange={(key, value) => updateFilter(key,value)}
+            />
 
         {loading && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

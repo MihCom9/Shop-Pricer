@@ -10,22 +10,34 @@ export default function PromotionCard({ promotion, onAddToCart }) {
     setTimeout(() => setAdded(false), 1500);
   };
 
-  const saving = (promotion.price - promotion.pricePromotion).toFixed(2);
+  const hasPromo = promotion.pricePromotion != null && promotion.pricePromotion < promotion.price && promotion.pricePromotion > 0;
+  const saving = hasPromo ? (promotion.price - promotion.pricePromotion).toFixed(2) : null;
 
   return (
-    <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm hover:border-stone-300 transition-all flex flex-col gap-3">
+    <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm hover:border-stone-300 hover:scale-105 transition-all flex flex-col gap-3">
       {/* Discount badge + category */}
       <div className="flex items-start justify-between gap-2">
-        <span className="bg-red-50 text-red-500 text-xs font-bold px-2 py-1 rounded-lg flex-shrink-0">
-          -{promotion.discountPercent.toFixed(0)}%
-        </span>
+        {hasPromo ? (
+          <span className="bg-red-50 text-red-500 text-xs font-bold px-2 py-1 rounded-lg flex-shrink-0">
+            -{promotion.discountPercent.toFixed(0)}%
+          </span>
+        ) : (
+          <span className="bg-stone-50 text-stone-400 text-xs font-medium px-2 py-1 rounded-lg flex-shrink-0">
+            No promo
+          </span>
+        )}
         <span className="text-xs text-stone-400 text-right truncate">{promotion.categoryName}</span>
       </div>
 
       {/* Product name */}
       <div className="flex items-start gap-2 min-w-0">
         <Tag size={13} className="text-red-400 mt-0.5 flex-shrink-0" />
-        <p className="text-sm font-medium text-stone-700 leading-snug">{promotion.productName}</p>
+        <div className="flex flex-col gap-0.5">
+          <p className="text-sm font-medium text-stone-700 leading-snug">{promotion.productName}</p>
+          {promotion.measurements && (
+            <p className="text-xs text-stone-400 pt-0.25">{promotion.measurements}</p>
+          )}
+        </div>
       </div>
 
       {/* Store */}
@@ -42,12 +54,16 @@ export default function PromotionCard({ promotion, onAddToCart }) {
       {/* Price row */}
       <div className="flex items-baseline gap-2">
         <span className="text-lg font-bold text-stone-800">
-          {promotion.pricePromotion.toFixed(2)} €
+          {hasPromo ? promotion.pricePromotion.toFixed(2) : promotion.price.toFixed(2)} €
         </span>
-        <span className="text-sm text-stone-300 line-through">
-          {promotion.price.toFixed(2)} €
-        </span>
-        <span className="text-xs text-red-400 ml-auto">-{saving} €</span>
+        {hasPromo && (
+          <>
+            <span className="text-sm text-stone-300 line-through">
+              {promotion.price.toFixed(2)} €
+            </span>
+            <span className="text-xs text-red-400 ml-auto">-{saving} €</span>
+          </>
+        )}
       </div>
 
       {/* Add to list button */}

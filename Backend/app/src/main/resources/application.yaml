@@ -27,7 +27,8 @@ logging:
     root: WARN
     com.example.demo.service.BrandExtractor: DEBUG
     com.example.demo: INFO
-    org.hibernate.SQL: WARN
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
   # file:
   #   name: ./logs/appBrand.log
   # logback:

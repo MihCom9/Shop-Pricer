@@ -50,10 +50,13 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     scored AS (
         SELECT
             bf.*,
-            word_similarity(
-                array_to_string(array(SELECT unnest(string_to_array(bf.clean_product, ' ')) ORDER BY 1), ' '),
-                array_to_string(array(SELECT unnest(string_to_array(bf.clean_query,   ' ')) ORDER BY 1), ' ')
-            ) AS word_score,
+            CASE
+                WHEN trim(bf.clean_query) = '' THEN 1.0
+                ELSE word_similarity(
+                    array_to_string(array(SELECT unnest(string_to_array(bf.clean_product, ' ')) ORDER BY 1), ' '),
+                    array_to_string(array(SELECT unnest(string_to_array(bf.clean_query,   ' ')) ORDER BY 1), ' ')
+                )
+            END AS word_score,
             array_length(string_to_array(trim(bf.clean_query), ' '), 1) AS word_count,
             NOT EXISTS (
                 SELECT 1
@@ -63,6 +66,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                         '(\\d+[.,]?\\d*\\s*(?:%|Г|ГР|КГ|МЛ|Л))', 'g') AS match
                 )) AS q_unit
                 WHERE upper(bf.product_name) !~ ('(^|[^0-9,\\.])' || q_unit || '([^0-9,\\.]|$)')
+                AND (bf.measurements IS NULL OR upper(bf.measurements) !~ ('(^|[^0-9,\\.])' || q_unit || '([^0-9,\\.]|$)'))
             ) AS units_match
         FROM cleaned bf
     )
@@ -119,6 +123,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                 s.name                   AS storeName,
                 cat.cid::text                       AS category,
                 COALESCE(cat.name, cat.cid::text)   AS categoryName,
+                pt.measurements AS measurements,
                 trim(pt.price)           AS price,
                 trim(pt.price_promotion) AS pricePromotion
             FROM product_test pt
@@ -145,7 +150,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
         ),
         grouped AS MATERIALIZED (
             SELECT
-                productName, storeName, category, categoryName, price, pricePromotion,
+                productName, storeName, category, categoryName, price, pricePromotion, measurements,
                 array_agg(store) AS locations,
                 CAST(REPLACE(MAX(pricePromotion), ',', '.') AS NUMERIC) AS promo_num,
                 CAST(REPLACE(MAX(price),          ',', '.') AS NUMERIC) AS price_num
@@ -154,12 +159,11 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             AND price_num > 0
             AND promo_num < price_num
             AND (1 - promo_num / price_num) * 100 >= :minDiscount
-            GROUP BY productName, storeName, category, categoryName, price, pricePromotion
+            GROUP BY productName, storeName, category, categoryName, price, pricePromotion, measurements
         )
-        SELECT productName, storeName, category, categoryName, price, pricePromotion, locations
+        SELECT productName, storeName, category, categoryName, price, pricePromotion, locations, measurements,
+        (1 - promo_num / price_num) AS discount_perc, promo_num
         FROM grouped
-        ORDER BY (1 - promo_num / price_num) DESC
-        LIMIT :limit OFFSET :offset
             """, nativeQuery = true)
     List<PromotionProjection> findPromotions(
             @Param("city")        String city,
@@ -167,20 +171,116 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             @Param("category")    String category,
             @Param("search")      String search,
             @Param("minDiscount") int minDiscount,
-            @Param("limit")       int limit,
-            @Param("offset")      int offset
+            Pageable pageable
+    );
+    @Query(value = """
+        WITH base AS MATERIALIZED (
+            SELECT
+                prod.name                           AS productName,
+                sl.location                         AS store,
+                s.name                              AS storeName,
+                cat.cid::text                       AS category,
+                COALESCE(cat.name, cat.cid::text)   AS categoryName,
+                pt.measurements                     AS measurements,
+                trim(pt.price)                      AS price,
+                trim(pt.price_promotion)            AS pricePromotion
+            FROM product_test pt
+            JOIN products       prod  ON prod.id  = pt.product_id
+            JOIN store_locations sl   ON sl.id    = pt.store_id
+            JOIN stores         s     ON s.id     = sl.store_id
+            JOIN cities         c     ON c.id     = pt.city_id
+            JOIN categories     cat   ON cat.id   = pt.category_id
+            WHERE c.ekatte = :city
+              AND trim(pt.price) ~ '^[0-9]+([,.][0-9]+)?$'
+              AND (CAST(:store AS TEXT) IS NULL
+                OR s.name ILIKE CONCAT('%', :store, '%'))
+              AND (CAST(:category AS TEXT) IS NULL
+                OR COALESCE(cat.name, cat.cid::text) = :category)
+              AND (CAST(:search AS TEXT) IS NULL
+                OR prod.name ILIKE CONCAT('%', :search, '%'))
+              AND prod.name NOT ILIKE '%НЗОК%'
+
+        ),
+        scored AS MATERIALIZED (
+            SELECT *,
+                CASE
+                    WHEN trim(pricePromotion) ~ '^[0-9]+([,.][0-9]+)?$'
+                    THEN CAST(REPLACE(trim(pricePromotion), ',', '.') AS NUMERIC)
+                    ELSE NULL
+                END AS promo_num,
+                CAST(REPLACE(price, ',', '.') AS NUMERIC) AS price_num,
+                CASE
+                    WHEN trim(pricePromotion) ~ '^[0-9]+([,.][0-9]+)?$'
+                         AND CAST(REPLACE(trim(pricePromotion), ',', '.') AS NUMERIC) > 0
+                         AND CAST(REPLACE(trim(pricePromotion), ',', '.') AS NUMERIC)
+                             < CAST(REPLACE(price, ',', '.') AS NUMERIC)
+                    THEN CAST(REPLACE(trim(pricePromotion), ',', '.') AS NUMERIC)
+                    ELSE CAST(REPLACE(price, ',', '.') AS NUMERIC)
+                END AS effective_price
+            FROM base
+        ),
+        grouped AS MATERIALIZED (
+            SELECT
+                productName, storeName, category, categoryName, price, pricePromotion, measurements,
+                array_agg(store)    AS locations,
+                MAX(price_num)      AS price_num,
+                MAX(promo_num)      AS promo_num,
+                MIN(effective_price) AS effective_price
+            FROM scored
+            WHERE (:promotionsOnly = false OR (
+                promo_num IS NOT NULL
+                AND promo_num > 0
+                AND promo_num < price_num
+                AND (1 - promo_num / price_num) * 100 >= :minDiscount
+            ))
+            GROUP BY productName, storeName, category, categoryName, price, pricePromotion, measurements
+        )
+        SELECT
+            productName, storeName, category, categoryName, price, pricePromotion, locations, measurements,
+            CASE
+                WHEN promo_num IS NOT NULL AND promo_num > 0 AND promo_num < price_num
+                THEN (1 - promo_num / price_num)
+                ELSE 0
+            END AS discount_perc,
+            promo_num,
+            effective_price
+        FROM grouped
+            """, nativeQuery = true)
+    List<PromotionProjection> browseProducts(
+            @Param("city")           String city,
+            @Param("store")          String store,
+            @Param("category")       String category,
+            @Param("search")         String search,
+            @Param("minDiscount")    int minDiscount,
+            @Param("promotionsOnly") boolean promotionsOnly,
+            Pageable pageable
     );
 
     @Query(value = "SELECT COALESCE(name, cid::text) FROM categories ORDER BY cid", nativeQuery = true)
     List<String> findAllCategoryIds();
 
     @Query(value = """
-        SELECT DISTINCT sl.location
-        FROM store_locations sl
+        SELECT DISTINCT s.name
+        FROM stores s
+        JOIN store_locations sl ON sl.store_id = s.id
         JOIN product_test pt ON pt.store_id = sl.id
         JOIN cities c ON c.id = pt.city_id
         WHERE c.ekatte = :city
-        ORDER BY sl.location
+        ORDER BY s.name
     """, nativeQuery = true)
     List<String> findStoreNames(@Param("city") String city);
+
+    @Query(value = """
+        SELECT DISTINCT sl.location
+        FROM store_locations sl
+        JOIN stores s ON s.id = sl.store_id
+        JOIN product_test pt ON pt.store_id = sl.id
+        JOIN cities c ON c.id = pt.city_id
+        WHERE s.name = :store
+        AND c.ekatte = :city
+        ORDER BY sl.location
+    """, nativeQuery = true)
+    List<String> findStoreLocations(
+        @Param("city") String city,
+        @Param("store") String store);
 }
