@@ -65,9 +65,9 @@ export default function Navbar() {
             }>Shop</NavLink>
           </li>
           <li>
-            <NavLink to="/promotions" className={({ isActive }) =>
+            <NavLink to={'/browse' + (localStorage.getItem('lastPromotionsUrl') ?? '')} className={({ isActive }) =>
               `text-sm font-medium transition-colors ${isActive ? "text-gray-900" : "text-gray-400 hover:text-gray-700"}`
-            }>Promotions</NavLink>
+            }>Browse</NavLink>
           </li>
         </ul>
 
