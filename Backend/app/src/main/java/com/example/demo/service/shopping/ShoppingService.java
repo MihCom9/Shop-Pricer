@@ -126,11 +126,11 @@ public class ShoppingService {
                             Product::getStore,
                             p -> p,
                             (p1, p2) -> {
-                                if (requestedGrams != null) {
-                                    double d1 = Math.abs(extractProductWeightGrams(p1) - requestedGrams);
-                                    double d2 = Math.abs(extractProductWeightGrams(p2) - requestedGrams);
-                                    return d1 <= d2 ? p1 : p2;
-                                }
+                                // if (requestedGrams != null) {
+                                //     double d1 = Math.abs(extractProductWeightGrams(p1) - requestedGrams);
+                                //     double d2 = Math.abs(extractProductWeightGrams(p2) - requestedGrams);
+                                //     return d1 <= d2 ? p1 : p2;
+                                // }
                                 return p1.getEffectivePrice().compareTo(p2.getEffectivePrice()) <= 0 ? p1 : p2;
                             }
                     ));
