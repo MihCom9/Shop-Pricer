@@ -1,10 +1,11 @@
 import { Tag, ShoppingCart, Check, MapPin } from 'lucide-react';
 import { useState } from 'react';
 
-export default function PromotionCard({ promotion, onAddToCart }) {
+export default function PromotionCard({ promotion, onAddToCart, onCardClick }) {
   const [added, setAdded] = useState(false);
 
-  const handleAdd = () => {
+  const handleAdd = (e) => {
+    e.stopPropagation();
     onAddToCart(promotion);
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
@@ -14,7 +15,10 @@ export default function PromotionCard({ promotion, onAddToCart }) {
   const saving = hasPromo ? (promotion.price - promotion.pricePromotion).toFixed(2) : null;
 
   return (
-    <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm hover:border-stone-300 hover:scale-105 transition-all flex flex-col gap-3">
+    <div 
+      onClick={() => {onCardClick(promotion)}} 
+      className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm hover:border-stone-300 hover:scale-105 transition-all flex flex-col gap-3"
+    >
       {/* Discount badge + category */}
       <div className="flex items-start justify-between gap-2">
         {hasPromo ? (
@@ -45,6 +49,7 @@ export default function PromotionCard({ promotion, onAddToCart }) {
         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(promotion.storeName)}`}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={(e) => {e.stopPropagation();}}
         className="text-xs text-stone-400 truncate flex items-center gap-1 hover:text-blue-500 transition-colors w-fit max-w-full"
       >
         <MapPin size={11} className="flex-shrink-0" />

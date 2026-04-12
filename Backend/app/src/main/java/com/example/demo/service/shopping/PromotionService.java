@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import com.example.demo.data.repository.ProductRepository;
 import com.example.demo.data.repository.ProductTypeRepository;
 import com.example.demo.data.repository.PromotionProjection;
+import com.example.demo.data.repository.PromotionProjectionMaterialized;
 import com.example.demo.model.Shopping.PromotionItem;
 import com.example.demo.model.Shopping.StoreResult;
 
@@ -68,7 +69,7 @@ public class PromotionService {
                 promotionsOnly = false;
                 break;
         }
-        List<PromotionProjection> rows = productRepository.browseProducts(
+        List<PromotionProjectionMaterialized> rows = productRepository.browseProductsMaterialized(
                 city,
                 (store != null && !store.isBlank()) ? store : null,
                 (category != null && !category.isBlank()) ? category : null,
@@ -78,25 +79,25 @@ public class PromotionService {
                 pageable
         );
         System.out.println("=== ROWS FROM DB (" + rows.size() + ") ===");
-        for (PromotionProjection r : rows) {
-            System.out.println("  " + r.getProductName() + " | " + r.getLocations() + " | " + r.getStoreName() + " | " + r.getPrice() + " -> " + r.getPricePromotion()+ " , " + r.getEffectivePrice());
+        for (PromotionProjectionMaterialized r : rows) {
+            System.out.println("  " + r.getProductname() + " | " + r.getLocations() + " | " + r.getStorename() + " | " + r.getPriceNum() + " -> " + r.getPromoNum()+ " , " + r.getEffectivePrice());
         }
         List<PromotionItem> promotionResults = new ArrayList<>();
-        for (PromotionProjection item : rows) {
+        for (PromotionProjectionMaterialized item : rows) {
             try {
                 promotionResults.add(new PromotionItem(
-                    item.getProductName(),
+                    item.getProductname(),
                     Arrays.asList(item.getLocations()),
-                    item.getStoreName(),
-                    item.getCategoryName(),
+                    item.getStorename(),
+                    item.getCategoryname(),
                     item.getMeasurements(),
-                    item.getPrice(),
-                    item.getPricePromotion()
+                    item.getPriceNum(),
+                    item.getPromoNum()
                 ));
             } catch (Exception e) {
-                System.out.println("=== FAILED TO CREATE PromotionItem for: " + item.getProductName()
-                    + " | price='" + item.getPrice() + "'"
-                    + " | promo='" + item.getPricePromotion() + "'"
+                System.out.println("=== FAILED TO CREATE PromotionItem for: " + item.getProductname()
+                    + " | price='" + item.getPriceNum() + "'"
+                    + " | promo='" + item.getPromoNum() + "'"
                     + " | error: " + e.getMessage());
             }
 
@@ -105,5 +106,9 @@ public class PromotionService {
         promotionResults.forEach(System.out::println);
         System.out.println(sorting);
         return promotionResults;
+    }
+
+    public long getPromotionsCount(String city, String store,String storeLocation ,String category, String search, int minDiscount){
+        return productRepository.countPromotions(city, store, category, search, minDiscount);
     }
 }
