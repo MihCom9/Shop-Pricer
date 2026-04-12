@@ -49,4 +49,19 @@ public class PromotionController {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
+    @GetMapping("/promotions/count")
+    public long getPromotionsCount(
+        @RequestParam(required = false) String city,
+        @RequestParam(required = false) String store,
+        @RequestParam(required = false) String storeLocation,
+        @RequestParam(required = false) String category,
+        @RequestParam(required = false, defaultValue = "") String search,
+        @RequestParam(defaultValue = "0") int minDiscount
+    ){
+        try {
+            return promotionService.getPromotionsCount(city, store,storeLocation , category, search, minDiscount);
+        } catch (RuntimeException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
 }

@@ -31,11 +31,11 @@ public class PromotionItem extends ProductResult {
     }
 
     public PromotionItem(String productName, List<String> locations, String storeName,
-        String categoryName, String measurements, String price, String pricePromotion) {
+        String categoryName, String measurements, BigDecimal price, BigDecimal pricePromotion) {
         super(
             productName,
-            parsePrice(price),
-            parsePrice(pricePromotion),
+            price,
+            pricePromotion,
             measurements
         );
         if ((getPrice() == null || getPrice().compareTo(BigDecimal.ZERO) == 0)
