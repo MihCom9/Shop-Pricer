@@ -24,14 +24,14 @@ const PromotionFilter = ({filters, onClear, onChange}) => {
     // Load dropdowns once
     useEffect(() => {
     fetch(`${API_BASE_URL}/stores?city=68134`)
-        .then(r => r.json()).then(setStores).catch(() => {});
+        .then(r => r.json()).then(setStores).catch(() => {setStores([]);});
     fetch(`${API_BASE_URL}/product-types`)
-        .then(r => r.json()).then(setCategories).catch(() => {});
+        .then(r => r.json()).then(setCategories).catch(() => {setCategories([]);});
     }, []);
 
     useEffect(() => {
       if(filters.store){
-        fetch(`${API_BASE_URL}/store-locations?city=68134&store=${filters.store}`)
+        fetch(`${API_BASE_URL}/stores/locations?city=68134&store=${filters.store}`)
           .then(r=> r.json()).then(setStoreLocations).catch(() => {});
       }else{
         setStoreLocations([]);
