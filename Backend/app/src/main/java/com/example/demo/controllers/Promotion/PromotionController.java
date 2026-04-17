@@ -24,12 +24,7 @@ public class PromotionController {
     public PromotionController(PromotionService promotionService) {
         this.promotionService = promotionService;
     }
-    // const SORT_OPTIONS = [
-    //   { label: "Biggest discount", value: "discount" },
-    //   { label: "Lowest price", value: "price_asc" },
-    //   { label: "Highest price", value: "price_desc" },
-    //   { label: "Newest", value: "newest" },
-    // ];
+    
     @GetMapping("/promotions")
     public List<PromotionItem> getPromotions(
             @RequestParam(defaultValue = "68134") String city,

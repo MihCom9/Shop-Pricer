@@ -69,10 +69,16 @@ public class PromotionService {
                 promotionsOnly = false;
                 break;
         }
+        String categoryCode = null;
+        if (category != null && !category.isBlank()) {
+            categoryCode = productTypeRepository.findByProductNameIgnoreCase(category)
+                    .map(pt -> pt.getCode().toString())
+                    .orElse(null); // if not found by name, pass it as-is (maybe it's already a code)
+        }
         List<PromotionProjectionMaterialized> rows = productRepository.browseProductsMaterialized(
                 city,
                 (store != null && !store.isBlank()) ? store : null,
-                (category != null && !category.isBlank()) ? category : null,
+                categoryCode,
                 (search != null && !search.isBlank()) ? search : null,
                 minDiscount,
                 promotionsOnly,

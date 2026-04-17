@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.data.repository.StoresRepository;
+import com.example.demo.model.Shopping.CityInfo;
 
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
@@ -39,6 +40,11 @@ public class StoresController {
     @GetMapping("/cities")
     public List<String> getCities(){
         return storesRepository.findAllCityNames();
+    }
+
+    @GetMapping("/cities-full")
+    public List<CityInfo> getCitiesFull(){
+        return storesRepository.findAllCities();
     }
     
     @GetMapping("/cities/count")
