@@ -6,6 +6,7 @@ import Home from "./pages/Home/Home";
 import Login from "./pages/Login/Login";
 import SearchPage from "./pages/Search/SearchPage";
 import PromotionsPage from "./pages/Promotions/PromotionsPage";
+import AiAssistant from "./pages/Ai/AiAssistant";
 
 function App() {
   const [scrolled, setScrolled] = useState(false);
@@ -28,6 +29,7 @@ function App() {
             <Route path="/search" element={<SearchPage cart={cart} setCart={setCart} />} />
             <Route path="/browse" element={<PromotionsPage cart={cart} setCart={setCart} />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/ai" element={<AiAssistant />} />
           </Routes>
         </main>
       </div>

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.example.demo.data.Product;
+import com.example.demo.model.Shopping.CityInfo;
 
 public interface StoresRepository extends JpaRepository<Product, Long> {
     
@@ -47,6 +48,16 @@ public interface StoresRepository extends JpaRepository<Product, Long> {
         ORDER BY c.name_bg
         """, nativeQuery = true)
     List<String> findAllCityNames();
+
+    @Query(value = """
+        SELECT c.name_bg AS name, c.ekatte
+        FROM cities c
+        WHERE EXISTS (
+            SELECT 1 FROM product_test pt WHERE pt.city_id = c.id
+        )
+        ORDER BY c.name_bg
+        """, nativeQuery = true)
+    List<CityInfo> findAllCities();
 
     @Query(value = """
         SELECT COUNT(*) 

@@ -94,6 +94,16 @@ public class ShoppingService {
         }
         return Double.MAX_VALUE;
     }
+    private double extractNameWeightGrams(String name) {
+        String text = name;
+        Matcher m = WEIGHT_PATTERN.matcher(text.toUpperCase());
+        if (m.find()) {
+            double val = Double.parseDouble(m.group(1).replace(",", "."));
+            String unit = m.group(2).toUpperCase();
+            return (unit.equals("КГ") || unit.equals("Л")) ? val * 1000 : val;
+        }
+        return Double.MAX_VALUE;
+    }
     public List<StoreResult> findCheapestStore(String city, List<SearchProduct> shoppingList) {
 
         Map<String, Map<Product, BigDecimal>> storeProductPrices = new HashMap<>();
@@ -120,13 +130,14 @@ public class ShoppingService {
             }
 
             // Select best product PER STORE: closest size if weight requested, else cheapest
-            final Double requestedGrams = sp.getWeightGrams();
+            // final Double requestedGrams = extractNameWeightGrams(sp.getName());
+            final Double requestedGrams = null;
             Map<String, Product> selectedPerStore = products.stream()
                     .collect(Collectors.toMap(
                             Product::getStore,
                             p -> p,
                             (p1, p2) -> {
-                                // if (requestedGrams != null) {
+                                // if (requestedGrams != Double.MAX_VALUE) {
                                 //     double d1 = Math.abs(extractProductWeightGrams(p1) - requestedGrams);
                                 //     double d2 = Math.abs(extractProductWeightGrams(p2) - requestedGrams);
                                 //     return d1 <= d2 ? p1 : p2;

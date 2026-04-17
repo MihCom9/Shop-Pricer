@@ -21,6 +21,14 @@ spring:
     type: caffeine
     caffeine:
       spec: maximumSize=500,expireAfterWrite=15m
+  ai:
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY}
+        chat:
+          options:
+            model: gemini-2.5-flash-lite    # or gemini-2.5-flash
+            temperature: 0.4
 
 logging:
   level:
@@ -29,6 +37,8 @@ logging:
     com.example.demo: INFO
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
+    org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor: DEBUG 
+    org.springframework.ai: INFO 
   # file:
   #   name: ./logs/appBrand.log
   # logback:
