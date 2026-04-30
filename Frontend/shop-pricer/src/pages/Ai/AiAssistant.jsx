@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { ArrowUp, Sparkles, RotateCcw } from 'lucide-react';
 
 const API_BASE_URL = 'http://localhost:8080/api';
@@ -299,11 +300,11 @@ export default function AiAssistant() {
         /* ── Input area ── */
         .input-area {
           border-top: 1px solid var(--border);
-          padding: .75rem 1rem 1rem;
+          padding: 1.25rem 1rem 1rem;
           background: var(--card);
         }
         .input-wrap {
-          display: flex; align-items: flex-end; gap: 8px;
+          display: flex; align-items: flex-end; gap: 8px; align-items: center;
           background: var(--surface); border: 1px solid var(--border-md);
           border-radius: var(--r-md); padding: 8px 8px 8px 14px;
         }
@@ -329,7 +330,7 @@ export default function AiAssistant() {
         .send-btn:disabled { opacity: .45; cursor: not-allowed; }
         .input-hint {
           font-size: 11px; color: var(--ink-3);
-          margin-top: 6px; text-align: center;
+          margin-top: 8px; text-align: center;
         }
       `}</style>
 
@@ -384,7 +385,9 @@ export default function AiAssistant() {
                       {msg.role === 'user' ? 'Me' : 'AI'}
                     </div>
                   )}
-                  <div className={`bubble ${msg.role}`}>{msg.text}</div>
+                  <div className={`bubble ${msg.role}`}>
+                    <ReactMarkdown>{msg.text}</ReactMarkdown>
+                  </div>
                 </div>
               ))}
 
