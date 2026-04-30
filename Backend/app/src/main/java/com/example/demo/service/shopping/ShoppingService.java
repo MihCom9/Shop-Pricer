@@ -277,7 +277,8 @@ public class ShoppingService {
                 found, requiredProductCount
             );
 
-            if (complete) goodStores++; else badStores++;
+            if (complete) goodStores++; 
+            else badStores++;
         }
 
         System.out.printf("Total — good stores: %d, skipped: %d%n", goodStores, badStores);
