@@ -314,8 +314,15 @@ def main():
         if errors == 0:
             with conn.cursor() as cur:
                 print("\nSwapping tables...")
-                cur.execute("DROP TABLE product_test")
+                cur.execute("ALTER TABLE product_test RENAME TO product_old")
                 cur.execute("ALTER TABLE product_insert RENAME TO product_test")
+                conn.commit()  # commit the renames first
+                
+                cur.execute("REFRESH MATERIALIZED VIEW product_grouped")
+                conn.commit()  # commit the refresh
+                
+                cur.execute("DROP TABLE product_old")
+                conn.commit()  # commit the drop
             conn.commit()
             print("Done: product_insert renamed to product_test.")
         else:
