@@ -4,7 +4,7 @@ import com.example.demo.data.ProductType;
 import com.example.demo.data.repository.ProductTypeRepository;
 import com.example.demo.model.Admin.CreateProductTypeAliasRequest;
 import com.example.demo.model.Admin.CreateProductTypeRequest;
-import com.example.demo.service.shopping.BrandExtractor;
+import com.example.demo.service.admin.BrandExtractor;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;

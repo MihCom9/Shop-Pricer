@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.data.repository.StoresRepository;
-import com.example.demo.model.Shopping.CityInfo;
+import com.example.demo.model.City.CityInfo;
 
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
