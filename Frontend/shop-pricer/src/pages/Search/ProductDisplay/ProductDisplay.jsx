@@ -12,6 +12,7 @@ const formatSubtitle = (category, pieces, weightAmount, weightUnit) => {
 };
 
 const ProductDisplay = ({item, setCart}) => {
+    const isQuantity = item.unitType === 'quantity';
     const [showEdit, setShowEdit] = useState(false);
     const [details, setDetails] = useState(item.details);
     const [category] = useState(item.category);
@@ -29,17 +30,23 @@ const ProductDisplay = ({item, setCart}) => {
         }
     }, [showEdit]);
 
-    const saveProduct = () => {
+    const saveProduct = () => {        
+        const savedPieces = isQuantity ? pieces : 1;
+        const savedWeightAmount = isQuantity ? null : (weightAmount ? parseFloat(weightAmount) : null);
+        const savedWeightUnit = isQuantity ? null : weightUnit;
+
         const labelParts = [];
-        if (pieces > 1) labelParts.push(`${pieces}бр`);
-        if (weightUnit && parseFloat(weightAmount) > 0) labelParts.push(`${weightAmount} ${weightUnit}`);
+        if (isQuantity && savedPieces > 1) labelParts.push(`${savedPieces}бр`);
+        if (!isQuantity && savedWeightUnit && parseFloat(savedWeightAmount) > 0) 
+            labelParts.push(`${savedWeightAmount} ${savedWeightUnit}`);
+
         const label = details
             ? `${category} — ${details}${labelParts.length ? ' · ' + labelParts.join(' · ') : ''}`
             : `${category}${labelParts.length ? ' · ' + labelParts.join(' · ') : ''}`;
 
         setCart(prev => prev.map(i =>
             i.id === item.id
-                ? { ...i, details, pieces, weightAmount: weightAmount ? parseFloat(weightAmount) : null, weightUnit, label }
+                ? { ...i, details, pieces: savedPieces, weightAmount: savedWeightAmount, weightUnit: savedWeightUnit, label }
                 : i
         ));
         setShowEdit(false);
@@ -108,64 +115,62 @@ const ProductDisplay = ({item, setCart}) => {
 
                         {/* Quantity + size row */}
                         <div className="flex items-start gap-3">
-                            {/* бр */}
-                            <div className="flex flex-col gap-1">
-                                <p className="text-stone-400 text-xs">Quantity</p>
-                                <div className="flex items-center gap-1">
-                                    <button
-                                        type="button"
-                                        onClick={() => setPieces(p => Math.max(1, p - 1))}
-                                        className="w-7 h-7 rounded-lg border border-stone-200 hover:border-stone-400 text-stone-600 font-bold flex items-center justify-center transition-colors text-sm"
-                                    >
-                                        −
-                                    </button>
-                                    <span className="w-6 text-center text-stone-800 font-medium text-sm">{pieces}</span>
-                                    <button
-                                        type="button"
-                                        onClick={() => setPieces(p => p + 1)}
-                                        className="w-7 h-7 rounded-lg border border-stone-200 hover:border-stone-400 text-stone-600 font-bold flex items-center justify-center transition-colors text-sm"
-                                    >
-                                        +
-                                    </button>
-                                    <span className="text-stone-400 text-xs ml-0.5">бр</span>
-                                </div>
-                            </div>
-
-                            <span className="text-stone-200 mt-5">×</span>
-
-                            {/* Weight/volume */}
-                            <div className="flex flex-col gap-1 flex-1">
-                                <p className="text-stone-400 text-xs">Size <span className="text-stone-300">(optional)</span></p>
-                                <div className="flex gap-1">
-                                    {WEIGHT_UNITS.map(u => (
+                            {isQuantity ? (
+                                <div className="flex flex-col gap-1">
+                                    <p className="text-stone-400 text-xs">Quantity</p>
+                                    <div className="flex items-center gap-1">
                                         <button
-                                            key={u}
                                             type="button"
-                                            onClick={() => toggleWeightUnit(u)}
-                                            className={`flex-1 py-1 rounded-lg text-xs font-medium border transition-all ${
-                                                weightUnit === u
-                                                    ? 'bg-stone-800 text-white border-stone-800'
-                                                    : 'border-stone-200 text-stone-500 hover:border-stone-400'
-                                            }`}
+                                            onClick={() => setPieces(p => Math.max(1, p - 1))}
+                                            className="w-7 h-7 rounded-lg border border-stone-200 hover:border-stone-400 text-stone-600 font-bold flex items-center justify-center transition-colors text-sm"
                                         >
-                                            {u}
+                                            −
                                         </button>
-                                    ))}
-                                </div>
-                                {weightUnit && (
-                                    <div className="flex items-center gap-1.5 mt-1">
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            placeholder="e.g. 500"
-                                            value={weightAmount}
-                                            onChange={e => setWeightAmount(e.target.value)}
-                                            className="flex-1 px-3 py-1.5 rounded-lg border border-stone-200 focus:outline-none focus:border-stone-400 text-stone-700 text-sm"
-                                        />
-                                        <span className="text-stone-400 text-xs">{weightUnit}</span>
+                                        <span className="w-6 text-center text-stone-800 font-medium text-sm">{pieces}</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setPieces(p => p + 1)}
+                                            className="w-7 h-7 rounded-lg border border-stone-200 hover:border-stone-400 text-stone-600 font-bold flex items-center justify-center transition-colors text-sm"
+                                        >
+                                            +
+                                        </button>
+                                        <span className="text-stone-400 text-xs ml-0.5">бр</span>
                                     </div>
-                                )}
-                            </div>
+                                </div>)
+                                : (
+                                <div className="flex flex-col gap-1 flex-1">
+                                    <p className="text-stone-400 text-xs">Size</p>
+                                    <div className="flex gap-1">
+                                        {WEIGHT_UNITS.map(u => (
+                                            <button
+                                                key={u}
+                                                type="button"
+                                                onClick={() => toggleWeightUnit(u)}
+                                                className={`flex-1 py-1 rounded-lg text-xs font-medium border transition-all ${
+                                                    weightUnit === u
+                                                        ? 'bg-stone-800 text-white border-stone-800'
+                                                        : 'border-stone-200 text-stone-500 hover:border-stone-400'
+                                                }`}
+                                            >
+                                                {u}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    {weightUnit && (
+                                        <div className="flex items-center gap-1.5 mt-1">
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                placeholder="e.g. 500"
+                                                value={weightAmount}
+                                                onChange={e => setWeightAmount(e.target.value)}
+                                                className="flex-1 px-3 py-1.5 rounded-lg border border-stone-200 focus:outline-none focus:border-stone-400 text-stone-700 text-sm"
+                                            />
+                                            <span className="text-stone-400 text-xs">{weightUnit}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         <div className="flex flex-row justify-end gap-2 pt-1 border-t border-stone-100">

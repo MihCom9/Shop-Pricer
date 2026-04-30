@@ -19,7 +19,7 @@ const ProductCart = ({setCart, showModal, setShowModal}) => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [details, setDetails] = useState('');
   const [pieces, setPieces] = useState(1);
-  const [weightUnit, setWeightUnit] = useState(null);  // null = no weight selected
+  const [weightUnit, setWeightUnit] = useState(WEIGHT_UNITS[0]);  // null = no weight selected
   const [weightAmount, setWeightAmount] = useState('');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
@@ -31,18 +31,18 @@ const ProductCart = ({setCart, showModal, setShowModal}) => {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/product-types`);
+      const res = await fetch(`${API_BASE_URL}/categories`);
       const data = await res.json();
       setCategories(data);
     } catch {
-      setCategories(['Milk', 'Bread', 'Eggs', 'Cheese', 'Butter', 'Juice', 'Cereal', 'Laundry', 'Yogurt', 'Coffee']);
+      setCategories([]);
     } finally {
       setLoading(false);
     }
   };
 
   const filteredCategories = categories.filter(c =>
-    c.toLowerCase().includes(search.toLowerCase())
+    c.name.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleCategorySelect = (category) => {
@@ -55,12 +55,13 @@ const ProductCart = ({setCart, showModal, setShowModal}) => {
     if (!selectedCategory) return;
     setCart(prev => [...prev, {
       id: Date.now(),
-      category: selectedCategory,
+      category: selectedCategory.name,
+      unitType: selectedCategory.unitType,
       details: details.trim(),
       pieces,
       weightAmount: weightAmount ? parseFloat(weightAmount) : null,
       weightUnit,
-      label: formatLabel(selectedCategory, details.trim(), pieces, weightAmount, weightUnit),
+      label: formatLabel(selectedCategory.name, details.trim(), pieces, weightAmount, weightUnit),
     }]);
     closeModal();
   };
@@ -71,7 +72,7 @@ const ProductCart = ({setCart, showModal, setShowModal}) => {
     setSelectedCategory('');
     setDetails('');
     setPieces(1);
-    setWeightUnit(null);
+    setWeightUnit(WEIGHT_UNITS[0]);
     setWeightAmount('');
     setSearch('');
   };
@@ -94,7 +95,7 @@ const ProductCart = ({setCart, showModal, setShowModal}) => {
 
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-stone-800">
-                {step === 1 ? 'Pick a Category' : `Details for ${selectedCategory}`}
+                {step === 1 ? 'Pick a Category' : `Details for ${selectedCategory.name}`}
               </h2>
               <button onClick={closeModal} className="text-stone-300 hover:text-stone-500 transition-colors">
                 <X size={22} />
@@ -128,7 +129,7 @@ const ProductCart = ({setCart, showModal, setShowModal}) => {
                           onClick={() => handleCategorySelect(cat)}
                           className="w-full text-left px-4 py-3 rounded-xl border border-stone-200 hover:border-stone-400 hover:bg-stone-50 transition-all text-stone-700 font-medium"
                         >
-                          {cat}
+                          {cat.name}
                         </button>
                       ))}
                       {filteredCategories.length === 0 && (
@@ -153,70 +154,69 @@ const ProductCart = ({setCart, showModal, setShowModal}) => {
                     />
 
                     {/* Quantity row */}
+                    
                     <div className="flex items-center gap-4 mb-4">
                       {/* бр picker */}
-                      <div className="flex flex-col gap-1">
-                        <span className="text-stone-400 text-xs">Quantity</span>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => setPieces(p => Math.max(1, p - 1))}
-                            className="w-8 h-8 rounded-lg border border-stone-200 hover:border-stone-400 text-stone-600 font-bold flex items-center justify-center transition-colors"
-                          >
-                            −
-                          </button>
-                          <span className="w-7 text-center text-stone-800 font-medium text-sm">{pieces}</span>
-                          <button
-                            type="button"
-                            onClick={() => setPieces(p => p + 1)}
-                            className="w-8 h-8 rounded-lg border border-stone-200 hover:border-stone-400 text-stone-600 font-bold flex items-center justify-center transition-colors"
-                          >
-                            +
-                          </button>
-                          <span className="text-stone-400 text-sm">бр</span>
-                        </div>
-                      </div>
-
-                      <span className="text-stone-200 text-lg mt-4">×</span>
-
-                      {/* Weight/volume (optional) */}
-                      <div className="flex flex-col gap-1 flex-1">
-                        <span className="text-stone-400 text-xs">Size <span className="text-stone-300">(optional)</span></span>
-                        <div className="flex gap-1">
-                          {WEIGHT_UNITS.map(u => (
+                      {selectedCategory?.unitType === 'quantity' ? (
+                        <div className="flex flex-col gap-1">
+                          <span className="text-stone-400 text-xs">Quantity</span>
+                          <div className="flex items-center gap-1.5">
                             <button
-                              key={u}
                               type="button"
-                              onClick={() => toggleWeightUnit(u)}
-                              className={`flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                                weightUnit === u
-                                  ? 'bg-stone-800 text-white border-stone-800'
-                                  : 'border-stone-200 text-stone-500 hover:border-stone-400'
-                              }`}
+                              onClick={() => setPieces(p => Math.max(1, p - 1))}
+                              className="w-8 h-8 rounded-lg border border-stone-200 hover:border-stone-400 text-stone-600 font-bold flex items-center justify-center transition-colors"
                             >
-                              {u}
+                              −
                             </button>
-                          ))}
-                        </div>
-                        {weightUnit && (
-                          <div className="flex items-center gap-1.5 mt-1">
-                            <input
-                              type="number"
-                              min="1"
-                              placeholder="e.g. 500"
-                              value={weightAmount}
-                              onChange={e => setWeightAmount(e.target.value)}
-                              className="flex-1 px-3 py-1.5 rounded-lg border border-stone-200 focus:outline-none focus:border-stone-400 text-stone-700 text-sm"
-                            />
-                            <span className="text-stone-400 text-sm">{weightUnit}</span>
+                            <span className="w-7 text-center text-stone-800 font-medium text-sm">{pieces}</span>
+                            <button
+                              type="button"
+                              onClick={() => setPieces(p => p + 1)}
+                              className="w-8 h-8 rounded-lg border border-stone-200 hover:border-stone-400 text-stone-600 font-bold flex items-center justify-center transition-colors"
+                            >
+                              +
+                            </button>
+                            <span className="text-stone-400 text-sm">бр</span>
                           </div>
-                        )}
-                      </div>
+                        </div>) : (
+                        <div className="flex flex-col gap-1 flex-1">
+                          <span className="text-stone-400 text-xs">Size</span>
+                          <div className="flex gap-1">
+                            {WEIGHT_UNITS.map(u => (
+                              <button
+                                key={u}
+                                type="button"
+                                onClick={() => toggleWeightUnit(u)}
+                                className={`flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                                  weightUnit === u
+                                    ? 'bg-stone-800 text-white border-stone-800'
+                                    : 'border-stone-200 text-stone-500 hover:border-stone-400'
+                                }`}
+                              >
+                                {u}
+                              </button>
+                            ))}
+                          </div>
+                          {weightUnit && (
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <input
+                                type="number"
+                                min="1"
+                                placeholder="e.g. 500"
+                                value={weightAmount}
+                                onChange={e => setWeightAmount(e.target.value)}
+                                className="flex-1 px-3 py-1.5 rounded-lg border border-stone-200 focus:outline-none focus:border-stone-400 text-stone-700 text-sm"
+                              />
+                              <span className="text-stone-400 text-sm">{weightUnit}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
-
+                    
                     <div className="flex gap-3 mt-2">
                       <button
-                        onClick={() => { setStep(1); setDetails(''); setPieces(1); setWeightUnit(null); setWeightAmount(''); }}
+                        onClick={() => { setStep(1); setDetails(''); setPieces(1); setWeightUnit(WEIGHT_UNITS[0]); setWeightAmount(''); }}
                         className="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-700 py-3 rounded-xl transition-all"
                       >
                         Back

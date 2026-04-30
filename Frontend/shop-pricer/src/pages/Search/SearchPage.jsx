@@ -1,17 +1,35 @@
 import ProductCart from "./ProductCart/ProductCart";
-import { ShoppingCart, Plus, Search } from 'lucide-react';
+import { ShoppingCart, Plus, Search, SlidersHorizontal } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import "./SearchPage.css";
 import ProductDisplay from "./ProductDisplay/ProductDisplay";
 import StoreResults from "./StoreResults/StoreResults";
 import { supabase } from "../../lib/supabase";
+import AdvancedSearch from "./AdvancedSearch/AdvancedSearch";
+
+
+export const DEFAULT_FILTERS = {
+    city: "68134",       // Sofia
+    maxDistance: null,   // no limit
+    stores: [],          // all chains
+    sortBy: "price",     // cheapest first
+};
 
 export default function SearchPage({ cart, setCart }) {
     const [searchLoading, setSearchLoading] = useState(false);
     const [result, setResult] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [showFilters, setShowFilters] = useState(false);
     const [preferredLocations, setPreferredLocations] = useState(new Set());
+    const [filters, setFilters] = useState(DEFAULT_FILTERS);
     const preferredLocationsRef = useRef(new Set());
+
+    const activeFilterCount = [
+        filters.city !== DEFAULT_FILTERS.city,
+        filters.maxDistance !== null,
+        filters.stores.length > 0,
+        filters.sortBy !== "price",
+    ].filter(Boolean).length;
 
     useEffect(() => {
         supabase.auth.getUser().then(async ({ data }) => {
@@ -67,7 +85,7 @@ export default function SearchPage({ cart, setCart }) {
 
         try {
             const response = await fetch(
-            `http://localhost:8080/api/cheapest?city=${encodeURIComponent('68134')}`,
+            `http://localhost:8080/api/cheapest?city=${encodeURIComponent(filters.city)}`,
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -84,6 +102,7 @@ export default function SearchPage({ cart, setCart }) {
                     return 0;
                 });
             }
+            console.log(data);
             setResult(data);
             if (Array.isArray(data)) saveHistoryFromResults(data);
         } catch (error) {
@@ -104,14 +123,40 @@ export default function SearchPage({ cart, setCart }) {
                         <h1 className="text-3xl font-bold text-stone-800">Shopping List</h1>
                         <p className="text-stone-400 mt-1">We'll find you the cheapest store</p>
                         </div>
-                        <button
-                        onClick={() => setShowModal(true)}
-                        className="bg-stone-800 hover:bg-stone-700 text-white px-5 py-3 rounded-xl flex items-center gap-2 transition-all"
-                        >
-                        <Plus size={18} /> Add Product
-                        </button>
+                        <div className="flex items-center gap-2">
+                            {/* Filter toggle button */}
+                            <button
+                                onClick={() => setShowFilters(v => !v)}
+                                className={`relative px-4 py-3 rounded-xl border transition-all flex items-center gap-2 text-sm ${
+                                    showFilters || activeFilterCount > 0
+                                        ? "bg-stone-800 text-white border-stone-800"
+                                        : "bg-white text-stone-600 border-stone-200 hover:border-stone-400"
+                                }`}
+                            >
+                                <SlidersHorizontal size={16} />
+                                Filters
+                                {activeFilterCount > 0 && (
+                                    <span className="bg-white text-stone-800 text-xs font-semibold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                                        {activeFilterCount}
+                                    </span>
+                                )}
+                            </button>
+ 
+                            <button
+                                onClick={() => setShowModal(true)}
+                                className="bg-stone-800 hover:bg-stone-700 text-white px-5 py-3 rounded-xl flex items-center gap-2 transition-all"
+                            >
+                                <Plus size={18} /> Add Product
+                            </button>
+                        </div>
                     </div>
                 </div>
+                <AdvancedSearch
+                    open={showFilters}
+                    onClose={() => setShowFilters(false)}
+                    filters={filters}
+                    setFilters={setFilters}
+                />
                 <ProductCart setCart={setCart} showModal={showModal} setShowModal={setShowModal} />
 
                 {/* Cart Items */}
