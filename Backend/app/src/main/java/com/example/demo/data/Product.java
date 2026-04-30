@@ -31,6 +31,10 @@ public class Product {
     private String measurements;
     @Transient
     private String searchVector;
+    
+    @Column(name = "match_tier", insertable = false, updatable = false)
+    private Integer matchTier;
+
     @Column(name = "full_store_name", insertable = false, updatable = false)
     private String fullStoreName;
 
@@ -54,6 +58,7 @@ public class Product {
         category=other.category;
         price= other.price;
         price_promotion= other.price_promotion;
+        matchTier = other.matchTier;
     }
 
     public void setId(Long id) {
@@ -148,6 +153,10 @@ public class Product {
 
     public void setFullStoreName(String fullStoreName) {
         this.fullStoreName = fullStoreName;
+    }
+
+    public Integer getMatchTier() {
+        return matchTier;
     }
     
 }
