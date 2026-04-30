@@ -75,7 +75,12 @@ public class ProductTools {
     // @Tool(description = "")
     // public long getPromotionsCount
 
-    @Tool(description = "Get all available product categories. Use this when the user asks what categories are available or when you need a valid category name before filtering products by category.")
+    @Tool(description = """
+    Get all available product categories and their unit type.
+    unit_type 'weight' means the product is sold by weight — use weightGrams to specify how many grams the user wants.
+    unit_type 'quantity' means the product is sold by piece — use quantity to specify how many units.
+    Always call this before filtering by category or building a shopping list.
+    """)
     public List<String> getCategories(){
         return productRepository.findAllCategoryIds();
     }

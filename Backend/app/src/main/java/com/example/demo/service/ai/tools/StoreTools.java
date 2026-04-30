@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.example.demo.data.repository.StoresRepository;
-import com.example.demo.model.Shopping.CityInfo;
+import com.example.demo.model.City.CityInfo;
 
 @Service
 public class StoreTools {
