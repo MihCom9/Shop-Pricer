@@ -4,10 +4,10 @@ public class SearchProduct {
     private String name;
     private String category;
     private String brand;
-    private int quantity;
+    private Integer quantity;
     private Double weightGrams;
 
-    public SearchProduct(String name,String category,String brand,int quantity){
+    public SearchProduct(String name,String category,String brand,Integer quantity){
         this.name=name;
         this.category=category;
         this.brand=brand;
@@ -37,11 +37,11 @@ public class SearchProduct {
         this.category = category;
     }
 
-    public int getQuantity() {
+    public Integer getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(int quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 

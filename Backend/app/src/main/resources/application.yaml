@@ -22,13 +22,13 @@ spring:
     caffeine:
       spec: maximumSize=500,expireAfterWrite=15m
   ai:
-    google:
-      genai:
-        api-key: ${GEMINI_API_KEY}
-        chat:
-          options:
-            model: gemini-2.5-flash-lite    # or gemini-2.5-flash
-            temperature: 0.4
+    openai:
+      api-key: ${OPENROUTER_API_KEY}
+      base-url: https://openrouter.ai/api/v1
+      chat:
+        options:
+          model: google/gemini-3-flash-preview
+          temperature: 0.4
 
 logging:
   level:
