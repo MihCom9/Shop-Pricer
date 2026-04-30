@@ -78,7 +78,7 @@ export default function PromotionsPage({ setCart }) {
       const results = await Promise.all(
         storesToFetch.map(loc => {
           const qs = new URLSearchParams({ city: '68134', limit: 20, offset: 0, minDiscount: filters.minDiscount, sort: filters.sort, show: filters.show });
-          if (debouncedSearch) qs.set('search', debouncedSearch);
+          if (filters.search) qs.set('search', filters.search);
           if (filters.category) qs.set('category', filters.category);
           qs.set('store', loc);
           return fetch(`${API_BASE_URL}/promotions?${qs}`).then(r => r.json()).catch(() => []);
@@ -117,7 +117,7 @@ export default function PromotionsPage({ setCart }) {
       sort: filters.sort,
       show: filters.show
     });
-    if (debouncedSearch) qs.set('search', debouncedSearch);
+    if (filters.search) qs.set('search', filters.search);
     if (filters.store) qs.set('store', filters.store);
     if (filters.category) qs.set('category', filters.category);
     return qs;
