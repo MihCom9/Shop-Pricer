@@ -2,6 +2,7 @@ package com.example.demo.controllers.Shopping;
 
 import com.example.demo.data.repository.ProductRepository;
 import com.example.demo.model.SearchProduct;
+import com.example.demo.model.Category.CategoryInfo;
 import com.example.demo.model.Shopping.PromotionItem;
 import com.example.demo.model.Shopping.StoreResult;
 import com.example.demo.service.shopping.ShoppingService;
@@ -42,9 +43,13 @@ public class ShopController {
         }
         
     }
-    @GetMapping("/product-types")
-    public List<String> getProductType(){
+    @GetMapping("/categories/names")
+    public List<String> getCategoryNames(){
         return productRepository.findAllCategoryIds();
+    }
+    @GetMapping("/categories")
+    public List<CategoryInfo> getCategoryFull(){
+        return productRepository.findAllCategoriesWithUnitType();
     }
 }
 

@@ -1,13 +1,19 @@
 package com.example.demo.model.Shopping;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.example.demo.data.Product;
 
 public class ShoppingProduct extends ProductResult {
+    private String cartItem;
     private boolean weightBased;
     private boolean sizeMismatch;
+    private List<BigDecimal> history;
+
 
     // Matches fixed quantities: 500ГР, 1КГ, 1Л, 500МЛ, 5БР
     private static final Pattern QTY_PATTERN = Pattern.compile(
@@ -20,10 +26,12 @@ public class ShoppingProduct extends ProductResult {
         Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
     );
 
-    public ShoppingProduct(Product product, Double requestedGrams){
+    public ShoppingProduct(Product product, Double requestedGrams, String cartItem){
         super(product);
         parseMeasurements(product.getMeasurements(), product.getProductName());
         this.sizeMismatch = computeSizeMismatch(requestedGrams);
+        this.cartItem = cartItem;
+        this.history = new ArrayList<>();
     }
 
     private boolean computeSizeMismatch(Double requestedGrams) {
@@ -76,4 +84,13 @@ public class ShoppingProduct extends ProductResult {
     public boolean isSizeMismatch() {
         return sizeMismatch;
     }
+
+    public String getCartItem() {
+        return cartItem;
+    }
+
+    public List<BigDecimal> getHistory() {
+        return history;
+    }
+    
 }

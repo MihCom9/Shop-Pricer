@@ -26,8 +26,11 @@ public class ProductType {
     @Column(nullable = false, unique = true, name="cid")
     private Integer code;  // 1,2,3,4
 
-    @Column(nullable = false, unique = true, length = 255, name="name")
+    @Column(length = 255, name="name")
     private String productName;
+
+    @Column(nullable = false, length = 25, name="unit_type")
+    private String unitType;
 
     // @Column(name = "created_at", nullable = false, updatable = false)
     // private LocalDateTime createdAt = LocalDateTime.now();
@@ -57,5 +60,13 @@ public class ProductType {
 
     public void setProductName(String productName) {
         this.productName = productName;
+    }
+
+    public String getUnitType() {
+        return unitType;
+    }
+    
+    public boolean isWeightBased() {
+        return "weight".equals(unitType);
     }
 }

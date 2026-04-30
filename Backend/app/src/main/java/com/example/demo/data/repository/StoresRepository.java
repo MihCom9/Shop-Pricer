@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.example.demo.data.Product;
-import com.example.demo.model.Shopping.CityInfo;
+import com.example.demo.model.City.CityInfo;
 
 public interface StoresRepository extends JpaRepository<Product, Long> {
     

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search, SlidersHorizontal, X, ChevronDown, ChevronUp } from 'lucide-react';
+import SearchSelect from './SearchSelect';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
@@ -25,7 +26,7 @@ const PromotionFilter = ({filters, onClear, onChange}) => {
     useEffect(() => {
     fetch(`${API_BASE_URL}/stores?city=68134`)
         .then(r => r.json()).then(setStores).catch(() => {setStores([]);});
-    fetch(`${API_BASE_URL}/product-types`)
+    fetch(`${API_BASE_URL}/categories/names`)
         .then(r => r.json()).then(setCategories).catch(() => {setCategories([]);});
     }, []);
 
@@ -79,32 +80,26 @@ const PromotionFilter = ({filters, onClear, onChange}) => {
                     className="w-full pl-8 pr-3 py-2.5 text-sm rounded-xl border border-stone-200 focus:outline-none focus:border-stone-400 text-stone-700"
                   />
                 </div>
-                <select
+                <SearchSelect
+                  options={stores}
                   value={filters.store}
-                  onChange={e => onChange("store", e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm rounded-xl border border-stone-200 focus:outline-none focus:border-stone-400 text-stone-700 bg-white"
-                >
-                  <option value="">All stores</option>
-                  {stores.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
+                  onChange={val => onChange("store", val)}
+                  placeholder="All stores"
+                />
                 {filters.store && (
-                  <select
+                  <SearchSelect
+                    options={storeLocations}
                     value={filters.storeLocation}
-                    onChange={e => onChange("storeLocation", e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm rounded-xl border border-stone-200 focus:outline-none focus:border-stone-400 text-stone-700 bg-white"
-                  >
-                    <option value="">All stores locations</option>
-                    {storeLocations.map(sl => <option key={sl} value={sl}>{sl}</option>)}
-                  </select>
+                    onChange={val => onChange("storeLocation", val)}
+                    placeholder="All stores locations"
+                  />
                 )}
-                <select
-                  value={filters.category}
-                  onChange={e => onChange("category", e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm rounded-xl border border-stone-200 focus:outline-none focus:border-stone-400 text-stone-700 bg-white"
-                >
-                  <option value="">All categories</option>
-                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+                <SearchSelect
+                    options={categories}
+                    value={filters.category}
+                    onChange={val => onChange("category", val)}
+                    placeholder="All categories"
+                />
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-stone-400 whitespace-nowrap">Min {filters.minDiscount}% off</span>
                   <input

@@ -1,4 +1,4 @@
-package com.example.demo.model.Shopping;
+package com.example.demo.model.City;
 
 public interface CityInfo {
     String getName();

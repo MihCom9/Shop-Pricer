@@ -1,4 +1,4 @@
-package com.example.demo.service.shopping;
+package com.example.demo.service.admin;
 
 import java.math.BigInteger;
 import java.util.List;
