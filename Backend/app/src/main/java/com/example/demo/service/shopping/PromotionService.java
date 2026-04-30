@@ -51,6 +51,7 @@ public class PromotionService {
                 break;
             default:
                 sort = Sort.by(Sort.Direction.DESC, "discount_perc");
+                sorting = "discount";
                 break;
         }
         if(limit <1){
@@ -76,13 +77,15 @@ public class PromotionService {
                     .orElse(null); // if not found by name, pass it as-is (maybe it's already a code)
         }
         List<PromotionProjectionMaterialized> rows = productRepository.browseProductsMaterialized(
-                city,
-                (store != null && !store.isBlank()) ? store : null,
-                categoryCode,
-                (search != null && !search.isBlank()) ? search : null,
-                minDiscount,
-                promotionsOnly,
-                pageable
+            city,
+            (store != null && !store.isBlank()) ? store : null,
+            categoryCode,
+            (search != null && !search.isBlank()) ? search : null,
+            minDiscount,
+            promotionsOnly,
+            sorting,   // pass directly
+            limit,
+            offset
         );
         System.out.println("=== ROWS FROM DB (" + rows.size() + ") ===");
         for (PromotionProjectionMaterialized r : rows) {
