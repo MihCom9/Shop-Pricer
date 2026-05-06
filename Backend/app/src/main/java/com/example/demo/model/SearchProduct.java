@@ -29,14 +29,6 @@ public class SearchProduct {
         this.name = name;
     }
 
-    public String getProductSort() {
-        return category;
-    }
-
-    public void setProductSort(String category) {
-        this.category = category;
-    }
-
     public Integer getQuantity() {
         return quantity;
     }

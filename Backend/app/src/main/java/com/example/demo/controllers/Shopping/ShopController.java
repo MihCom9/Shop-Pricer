@@ -3,6 +3,7 @@ package com.example.demo.controllers.Shopping;
 import com.example.demo.data.repository.ProductRepository;
 import com.example.demo.model.SearchProduct;
 import com.example.demo.model.Category.CategoryInfo;
+import com.example.demo.model.Shopping.ProductResult;
 import com.example.demo.model.Shopping.PromotionItem;
 import com.example.demo.model.Shopping.StoreResult;
 import com.example.demo.service.shopping.ShoppingService;
@@ -43,6 +44,20 @@ public class ShopController {
         }
         
     }
+
+    @GetMapping("/alts")
+    public List<ProductResult> findAlts(
+        @RequestParam String name,
+        @RequestParam String category,
+        @RequestParam String store,
+        @RequestParam String location,
+        @RequestParam String city,
+        @RequestParam(required = false) Integer quantity,
+        @RequestParam(required = false) Double weightGrams
+    ){
+        return shoppingService.findAlts(name, category, store, location, city, quantity, weightGrams);
+    }
+
     @GetMapping("/categories/names")
     public List<String> getCategoryNames(){
         return productRepository.findAllCategoryIds();

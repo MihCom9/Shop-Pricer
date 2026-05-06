@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.example.demo.data.Product;
+import com.example.demo.model.SearchProduct;
 
 public class StoreResult {
     private String storeName;
@@ -15,7 +16,7 @@ public class StoreResult {
     private boolean isBest;
     private BigDecimal savingsVsAvg;
 
-    public StoreResult(String location, String storeName, List<Product> products, BigDecimal totalPrice, Map<Product, Double> requestedGrams, Map<Product, String> cartItemNames) {
+    public StoreResult(String location, String storeName, List<Product> products, BigDecimal totalPrice, Map<Product, Double> requestedGrams, Map<Product, SearchProduct> cartItemNames) {
         this.locations = new ArrayList<>();
         this.locations.add(location);
         this.products = products.stream()
@@ -45,7 +46,7 @@ public class StoreResult {
 
     public void addLocation(String location, BigDecimal price, List<Product> locationProducts,
                         Map<Product, Double> requestedGrams,
-                        Map<Product, String> cartItemNames) {
+                        Map<Product, SearchProduct> cartItemNames) {
         if (!this.locations.contains(location)) {
             this.locations.add(location);
         }
