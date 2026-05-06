@@ -11,12 +11,14 @@ public class ProductResult {
     private BigDecimal price;
     private BigDecimal pricePromotion;
     private String measurements;
+    private Long id;
     
 
     public ProductResult(Product product) {
         this.productName = product.getProductName();
         this.price = product.getPriceAsDecimal();
         this.pricePromotion = product.getPricePromotionAsDecimal();
+        this.id = product.getId();
     }
     
     public ProductResult(String productName, BigDecimal price, BigDecimal pricePromotion, String measurements) {
@@ -24,6 +26,16 @@ public class ProductResult {
         this.price = price;
         this.pricePromotion = pricePromotion;
         this.measurements = measurements;
+        this.id = null;
+    }
+
+    // Constructor with id (for alts)
+    public ProductResult(String productName, BigDecimal price, BigDecimal pricePromotion, String measurements, Long id) {
+        this.productName = productName;
+        this.price = price;
+        this.pricePromotion = pricePromotion;
+        this.measurements = measurements;
+        this.id = id;
     }
 
     public String getProductName() {
@@ -57,5 +69,9 @@ public class ProductResult {
     public void setMeasurements(String measurements) {
         this.measurements = measurements;
     }
+
+    public Long getId() { return id; }
+    
+    public void setId(Long id) { this.id = id; }
     
 }

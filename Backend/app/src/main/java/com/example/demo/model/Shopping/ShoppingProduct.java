@@ -7,9 +7,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.example.demo.data.Product;
+import com.example.demo.model.SearchProduct;
 
 public class ShoppingProduct extends ProductResult {
-    private String cartItem;
+    private SearchProduct cartItem;
     private boolean weightBased;
     private boolean sizeMismatch;
     private List<BigDecimal> history;
@@ -26,12 +27,12 @@ public class ShoppingProduct extends ProductResult {
         Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
     );
 
-    public ShoppingProduct(Product product, Double requestedGrams, String cartItem){
+    public ShoppingProduct(Product product, Double requestedGrams, SearchProduct cartItem){
         super(product);
         parseMeasurements(product.getMeasurements(), product.getProductName());
         this.sizeMismatch = computeSizeMismatch(requestedGrams);
         this.cartItem = cartItem;
-        this.history = new ArrayList<>();
+        this.history = null;
     }
 
     private boolean computeSizeMismatch(Double requestedGrams) {
@@ -85,7 +86,7 @@ public class ShoppingProduct extends ProductResult {
         return sizeMismatch;
     }
 
-    public String getCartItem() {
+    public SearchProduct getCartItem() {
         return cartItem;
     }
 
