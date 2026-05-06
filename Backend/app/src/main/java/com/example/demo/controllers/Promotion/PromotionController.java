@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.example.demo.model.Shopping.ProductResult;
 import com.example.demo.model.Shopping.PromotionItem;
 import com.example.demo.service.shopping.PromotionService;
 
@@ -44,6 +45,7 @@ public class PromotionController {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
+
     @GetMapping("/promotions/count")
     public long getPromotionsCount(
         @RequestParam(required = false) String city,
