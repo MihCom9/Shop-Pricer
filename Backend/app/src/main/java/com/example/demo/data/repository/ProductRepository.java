@@ -171,66 +171,117 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             @Param("category") String category
     );
 
-    // ── Promotions query ──────────────────────────────────────────────────────
-
     @Query(value = """
         WITH base AS MATERIALIZED (
             SELECT
-                prod.name                AS productName,
-                sl.location                   AS store,
-                s.name                   AS storeName,
-                cat.cid::text                       AS category,
-                COALESCE(cat.name, cat.cid::text)   AS categoryName,
-                pt.measurements AS measurements,
-                trim(pt.price)           AS price,
-                trim(pt.price_promotion) AS pricePromotion
+                pt.id,
+                c.ekatte                     AS city,
+                sl.location                  AS store,
+                s.name                       AS full_store_name,
+                prod.name                    AS product_name,
+                prod.code                    AS code,
+                cat.cid::text                AS category,
+                trim(pt.price)               AS price,
+                trim(pt.price_promotion)     AS price_promotion,
+                pt.measurements
             FROM product_test pt
-            JOIN products   prod  ON prod.id  = pt.product_id
-            JOIN store_locations sl ON sl.id = pt.store_id
-            JOIN stores s ON s.id = sl.store_id
-            JOIN cities     c     ON c.id     = pt.city_id
-            JOIN categories cat   ON cat.id   = pt.category_id
-            WHERE c.ekatte = :city
-              AND trim(pt.price)           ~ '^[0-9]+([,.][0-9]+)?$'
-              AND trim(pt.price_promotion) ~ '^[0-9]+([,.][0-9]+)?$'
-              AND (CAST(:store AS TEXT) IS NULL
-                OR s.name ILIKE CONCAT('%', :store, '%'))
-              AND (CAST(:category AS TEXT) IS NULL
-                OR COALESCE(cat.name, cat.cid::text) = :category)
-              AND (CAST(:search AS TEXT) IS NULL
-                OR prod.name ILIKE CONCAT('%', :search, '%'))
+            JOIN products       prod ON prod.id  = pt.product_id
+            JOIN store_locations sl  ON sl.id    = pt.store_id
+            JOIN stores         s    ON s.id     = sl.store_id
+            JOIN cities         c    ON c.id     = pt.city_id
+            JOIN categories     cat  ON cat.id   = pt.category_id
+            WHERE c.ekatte       = :city
+            AND cat.cid::text    = :category
+            AND s.name ILIKE CONCAT('%', :storeName, '%')
+            AND sl.location      = :storeLocation
+            AND trim(pt.price) ~ '^[0-9]+([,.][0-9]+)?$'
+            AND prod.name NOT ILIKE '%НЗОК%'
         ),
-        scored AS MATERIALIZED (
-            SELECT *,
-                CAST(REPLACE(pricePromotion, ',', '.') AS NUMERIC) AS promo_num,
-                CAST(REPLACE(price,          ',', '.') AS NUMERIC) AS price_num
-            FROM base
-        ),
-        grouped AS MATERIALIZED (
+        cleaned AS (
             SELECT
-                productName, storeName, category, categoryName, price, pricePromotion, measurements,
-                array_agg(store) AS locations,
-                CAST(REPLACE(MAX(pricePromotion), ',', '.') AS NUMERIC) AS promo_num,
-                CAST(REPLACE(MAX(price),          ',', '.') AS NUMERIC) AS price_num
+                bf.*,
+                trim(regexp_replace(upper(bf.product_name),
+                    '(\\d+[.,]?\\d*\\s*(?:%|Г|ГР|КГ|МЛ|Л))', '', 'gi')) AS clean_product,
+                trim(regexp_replace(upper(:name),
+                    '(\\d+[.,]?\\d*\\s*(?:%|Г|ГР|КГ|МЛ|Г|Л))', '', 'gi')) AS clean_query
+            FROM base bf
+        ),
+        scored AS (
+            SELECT
+                bf.*,
+                CASE
+                    WHEN trim(bf.clean_query) = '' THEN 1.0
+                    ELSE word_similarity(
+                        array_to_string(array(SELECT unnest(string_to_array(bf.clean_product, ' ')) ORDER BY 1), ' '),
+                        array_to_string(array(SELECT unnest(string_to_array(bf.clean_query,   ' ')) ORDER BY 1), ' ')
+                    )
+                END AS word_score,
+                array_length(string_to_array(trim(bf.clean_query), ' '), 1) AS word_count,
+                NOT EXISTS (
+                    SELECT 1
+                    FROM unnest(ARRAY(
+                        SELECT replace(regexp_replace(match[1], '\\s+', '', 'g'), 'ГР', 'Г')
+                        FROM regexp_matches(upper(:name),
+                            '(\\d+[.,]?\\d*\\s*(?:%|ГР|КГ|МЛ|Г|Л))', 'g') AS match
+                    )) AS q_unit
+                    WHERE regexp_replace(upper(bf.product_name), '(\\d+[.,]?\\d*)\\s+(ГР|КГ|МЛ|Г|Л|%)', '\\1\\2', 'g') !~ ('(^|[^0-9,\\.])' || q_unit || '([^0-9,\\.]|$)')
+                    AND (bf.measurements IS NULL OR regexp_replace(upper(bf.measurements), '(\\d+[.,]?\\d*)\\s+(ГР|КГ|МЛ|Г|Л|%)', '\\1\\2', 'g') !~ ('(^|[^0-9,\\.])' || q_unit || '([^0-9,\\.]|$)'))
+                ) AS units_match,
+                word_similarity(
+                    array_to_string(
+                        ARRAY(
+                            SELECT replace(regexp_replace(match[1], '\\s+', '', 'g'), 'ГР', 'Г')
+                            FROM regexp_matches(upper(:name),
+                                '(\\d+[.,]?\\d*\\s*(?:%|ГР|КГ|МЛ|Г|Л))', 'g') AS match
+                        ), ' '
+                    ),
+                    upper(COALESCE(bf.measurements, ''))
+                ) AS measurement_score
+            FROM cleaned bf
+        ),
+        word_filtered AS (
+            SELECT *
             FROM scored
-            WHERE promo_num > 0
-            AND price_num > 0
-            AND promo_num < price_num
-            AND (1 - promo_num / price_num) * 100 >= :minDiscount
-            GROUP BY productName, storeName, category, categoryName, price, pricePromotion, measurements
+            WHERE word_score > CASE
+                WHEN word_count = 1 THEN 0.18
+                WHEN word_count = 2 THEN 0.41
+                WHEN word_count = 3 THEN 0.75
+                ELSE 0.80
+            END
+        ),
+        ranked AS (
+            SELECT *,
+                ROW_NUMBER() OVER (
+                    ORDER BY
+                        units_match DESC,
+                        measurement_score DESC,
+                        COALESCE(
+                            CASE WHEN trim(price_promotion) ~ '^[0-9]+([,.][0-9]+)?$'
+                                AND price_promotion::numeric > 0
+                                THEN price_promotion::numeric END,
+                            price::numeric
+                        ) ASC
+                ) AS rn
+            FROM word_filtered
         )
-        SELECT productName, storeName, category, categoryName, price, pricePromotion, locations, measurements,
-        (1 - promo_num / price_num) AS discount_perc, promo_num
-        FROM grouped
-            """, nativeQuery = true)
-    List<PromotionProjection> findPromotions(
-            @Param("city")        String city,
-            @Param("store")       String store,
-            @Param("category")    String category,
-            @Param("search")      String search,
-            @Param("minDiscount") int minDiscount,
-            Pageable pageable
-    );
+        SELECT id, city, store, full_store_name, product_name, code, category,
+            price, price_promotion, measurements, 1 AS match_tier
+        FROM ranked
+        WHERE rn > :offset
+        AND rn <= (:offset + :limit)
+        ORDER BY rn ASC
+        """, nativeQuery = true)
+        List<Product> findAltsForProduct(
+            @Param("city")      String city,
+            @Param("category")  String category,
+            @Param("storeName") String storeName,
+            @Param("storeLocation") String storeLocation,
+            @Param("name")      String name,
+            @Param("limit")     int limit,
+            @Param("offset")    int offset
+        );
+
+    // ── Promotions query ──────────────────────────────────────────────────────
 
     @Query(value = """
         WITH base AS MATERIALIZED (
