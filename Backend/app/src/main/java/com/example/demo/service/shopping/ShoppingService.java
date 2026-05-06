@@ -5,10 +5,12 @@ import com.example.demo.data.ProductType;
 import com.example.demo.data.repository.ProductRepository;
 import com.example.demo.data.repository.ProductTypeRepository;
 import com.example.demo.model.SearchProduct;
+import com.example.demo.model.Shopping.ProductResult;
 import com.example.demo.model.Shopping.StoreResult;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -48,7 +50,7 @@ public class ShoppingService {
     public List<StoreResult> findCheapestStore(String city, List<SearchProduct> shoppingList) {
         Map<String, Map<Product, BigDecimal>> storeProductPrices = new HashMap<>();
         Map<Product, Double> productToRequestedGrams = new HashMap<>();
-        Map<Product, String> productToCartItemName = new HashMap<>();
+        Map<Product, SearchProduct> productToCartItemName = new HashMap<>();
 
         for (SearchProduct sp : shoppingList) {
             processShoppingItem(city, sp, storeProductPrices, productToRequestedGrams, productToCartItemName);
@@ -59,8 +61,10 @@ public class ShoppingService {
         saveStoreResultsInFile(storeProductPrices, shoppingList.size());
 
         List<StoreResult> results = buildStoreResults(storeTotals, storeProductPrices, productToRequestedGrams, productToCartItemName);
-        results.sort(Comparator.comparing(StoreResult::hasSizeMismatch)
-                               .thenComparing(StoreResult::getTotalPrice));
+        results.sort(Comparator
+    .comparingInt((StoreResult sr) -> sr.getProducts().size() >= shoppingList.size() ? 0 : 1)
+    .thenComparing(StoreResult::hasSizeMismatch)
+    .thenComparing(StoreResult::getTotalPrice));
         if (results.isEmpty()) {
             throw new NoSuchElementException("No stores carry all requested products");
         }
@@ -71,11 +75,27 @@ public class ShoppingService {
         return results;
     }
 
+    public List<ProductResult> findAlts(String name, String category, String store,String location, String city, Integer quantity,Double weightGrams){
+        ProductType code   = resolveCategory(category);
+        List<ProductResult> alts = productRepository.findAltsForProduct(city, code.getCode().toString(), store, location, name, 5, 0)
+            .stream()
+            .map(p -> new ProductResult(
+                p.getProductName(),
+                p.getPriceAsDecimal(),
+                p.getPricePromotionAsDecimal(),
+                p.getMeasurements(),
+                p.getId()
+            ))
+            .collect(Collectors.toList());
+
+        return alts;
+    }
+
     // ── Step 1: resolve category and search name ──────────────────────────────
 
-    private ProductType resolveCategory(SearchProduct sp) {
-        return productTypeRepository.findByProductNameIgnoreCase(sp.getCategory())
-            .orElseThrow(() -> new RuntimeException("Product type not found: " + sp.getCategory()));
+    private ProductType resolveCategory(String category) {
+        return productTypeRepository.findByProductNameIgnoreCase(category)
+            .orElseThrow(() -> new RuntimeException("Product type not found: " + category));
     }
 
     /**
@@ -140,16 +160,16 @@ public class ShoppingService {
             SearchProduct sp,
             Map<String, Map<Product, BigDecimal>> storeProductPrices,
             Map<Product, Double> productToRequestedGrams,
-            Map<Product, String> productToCartItemName) {
+            Map<Product, SearchProduct> productToCartItemName) {
 
-        ProductType category   = resolveCategory(sp);
+        ProductType category   = resolveCategory(sp.getCategory());
         String searchName      = resolveSearchName(sp, category);
         List<Product> products = fetchProducts(city, category, searchName);
 
         selectBestProductPerStore(products).forEach((storeName, product) -> {
             BigDecimal cost = computeCost(sp, category, product);
 
-            productToCartItemName.put(product, sp.getName());
+            productToCartItemName.put(product, sp);
 
             storeProductPrices
                 .computeIfAbsent(storeName, k -> new HashMap<>())
@@ -170,8 +190,12 @@ public class ShoppingService {
             Map<String, Map<Product, BigDecimal>> storeProductPrices,
             int requiredProductCount) {
 
+        int threshold = requiredProductCount > 5
+            ? (int) Math.floor(requiredProductCount * 0.8)
+            : requiredProductCount;
+
         return storeProductPrices.entrySet().stream()
-            .filter(e -> e.getValue().size() >= requiredProductCount)
+            .filter(e -> e.getValue().size() >= threshold)
             .collect(Collectors.toMap(
                 Map.Entry::getKey,
                 e -> e.getValue().values().stream().reduce(BigDecimal.ZERO, BigDecimal::add)
@@ -184,7 +208,7 @@ public class ShoppingService {
             Map<String, BigDecimal> storeTotals,
             Map<String, Map<Product, BigDecimal>> storeProductPrices,
             Map<Product, Double> productToRequestedGrams,
-            Map<Product, String> productToCartItemName)  {
+            Map<Product, SearchProduct> productToCartItemName)  {
 
         Map<String, StoreResult> byChain = new LinkedHashMap<>(); // preserves insertion order
 

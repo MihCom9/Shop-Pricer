@@ -13,10 +13,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import com.example.demo.data.ProductType;
 import com.example.demo.data.repository.ProductRepository;
 import com.example.demo.data.repository.ProductTypeRepository;
 import com.example.demo.data.repository.PromotionProjection;
 import com.example.demo.data.repository.PromotionProjectionMaterialized;
+import com.example.demo.model.Shopping.ProductResult;
 import com.example.demo.model.Shopping.PromotionItem;
 import com.example.demo.model.Shopping.StoreResult;
 
