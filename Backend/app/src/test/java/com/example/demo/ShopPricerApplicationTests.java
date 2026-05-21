@@ -9,14 +9,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.example.demo.data.Product;
-import com.example.demo.data.repository.ProductRepository;
-import com.example.demo.model.SearchProduct;
-import com.example.demo.model.Shopping.StoreResult;
+import com.example.demo.repository.ProductRepository;
 import com.example.demo.service.shopping.ShoppingService;
-
-import java.math.BigDecimal;
-import java.util.List;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
