@@ -5,11 +5,12 @@ import PromotionCard from './PromotionCard/PromotionCard';
 import { supabase } from '../../lib/supabase';
 import PromotionFilter from './PromotionFilter/PromotionFilter';
 import BrowseModal from './PromotionCard/BrowseModal';
+import SelectListModal from './SelectList/SelectListModal';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 const PAGE_SIZE = 40;
 
-export default function PromotionsPage({ setCart }) {
+export default function PromotionsPage({ shoppingLists, setShoppingLists }) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -30,6 +31,7 @@ export default function PromotionsPage({ setCart }) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
+  const [selectShoppingList, setSelectShoppingList] = useState(null);
 
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const sentinelRef = useRef(null);
@@ -187,14 +189,8 @@ export default function PromotionsPage({ setCart }) {
     localStorage.setItem("lastPromotionUrl",searchParams.toString())
   },[searchParams])
 
-  const handleAddToCart = (promotion) => {
-    setCart(prev => [...prev, {
-      id: Date.now(),
-      category: promotion.categoryName,
-      details: promotion.productName + (promotion.measurements? " "+promotion.measurements: ""),
-      label: promotion.productName + (promotion.measurements? " "+promotion.measurements: ""),
-    }]);
-    navigate('/search');
+  const handleSelectShoppingList = (promotion) => {
+    setSelectShoppingList(promotion);
   };
 
   const updateFilter = (key, value) => {
@@ -269,7 +265,7 @@ export default function PromotionsPage({ setCart }) {
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {displayRecommended.map((p, i) => (
-                    <PromotionCard key={`rec-${i}`} promotion={p} onAddToCart={handleAddToCart} onCardClick={setSelectedCard}/>
+                    <PromotionCard key={`rec-${i}`} promotion={p} onAddToCart={handleSelectShoppingList} onCardClick={setSelectedCard}/>
                   ))}
                 </div>
               </div>
@@ -287,7 +283,7 @@ export default function PromotionsPage({ setCart }) {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {(displayRecommended.length > 0 ? other : promotions).map((p, i) => (
-                    <PromotionCard key={`promo-${i}`} promotion={p} onAddToCart={handleAddToCart} onCardClick={setSelectedCard} />
+                    <PromotionCard key={`promo-${i}`} promotion={p} onAddToCart={handleSelectShoppingList} onCardClick={setSelectedCard} />
                   ))}
                 </div>
               )}
@@ -303,7 +299,15 @@ export default function PromotionsPage({ setCart }) {
         )}
       </div>
         {selectedCard && (
-            <BrowseModal promotion={selectedCard} onClose={() => {setSelectedCard(null);}} onAddToCart={handleAddToCart}/>
+            <BrowseModal promotion={selectedCard} onClose={() => {setSelectedCard(null);}} onAddToCart={handleSelectShoppingList}/>
+          )}
+          {selectShoppingList && (
+            <SelectListModal
+              promotion={selectShoppingList}
+              shoppingLists={shoppingLists}
+              setShoppingLists={setShoppingLists}
+              onClose={() => setSelectShoppingList(null)}
+            />
           )}
     </div>
   );
