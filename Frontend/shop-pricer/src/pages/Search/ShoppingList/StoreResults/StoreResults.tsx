@@ -1,26 +1,49 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown, ShoppingBag, Trophy } from "lucide-react";
 import StoreDetailsSheet from "./StoreDetails/StoreDetailsSheet";
+import type { DisplayResultProduct, StoreResult } from "../../types";
+import type { SelectedStore } from "./types";
+
+interface StoreResultProps {
+  results: StoreResult[]
+  onPriceChange: (store: StoreResult, productId: string, alt: DisplayResultProduct) => void
+  preferredLocations: Set<string>
+  isStoreEdited: (store: StoreResult) => boolean
+  onResetStore: (storeKey: string) => void
+  isProductEdited: (storeKey: string, productId: number) => boolean
+}
 
 
-const StoreResults = ({ results, onPriceChange ,preferredLocations = new Set() }) => {
-  const [openStore, setOpenStore] = useState(null);
-  const [selectedStore, setSelectedStore] = useState(null);
-  const minPrice = Math.min(...results.map((s) => s.totalPrice));
+const StoreResults = ({ results, onPriceChange ,preferredLocations = new Set(), isStoreEdited, onResetStore, isProductEdited }: StoreResultProps) => {
+  const getStoreItemCount = (s : StoreResult): number => {
+    return s.products.filter(p => p.product !== null).length;
+  } 
+  const [selectedStore, setSelectedStore] = useState<SelectedStore | null>(null);
+  const maxItems = Math.max(...results.map(s => getStoreItemCount(s)));
+  const fullResults = results.filter(s => getStoreItemCount(s) === maxItems);
+  const minPrice = Math.min(...fullResults.map(s => s.totalPrice));
+  const sortedResults = [...results].sort((a, b) => {
+      const aFull = a.products.filter(p => p.product !== null).length;
+      const bFull = b.products.filter(p => p.product !== null).length;
+      if (bFull !== aFull) return bFull - aFull;
+      return a.totalPrice - b.totalPrice;
+  });
 
-  const handlePriceChange = (updatedStore, product, alt) => {
-    setSelectedStore(prev => ({ ...prev, totalPrice: updatedStore.totalPrice }));
-    onPriceChange(updatedStore, product, alt);
-  };
+  useEffect(() => {
+      if (!selectedStore) return;
+      const updated = results.find(s => s.storeName + s.locations[0] === selectedStore.storeName + selectedStore.address);
+      if (updated) setSelectedStore(prev => prev ? { ...prev, products: updated.products, totalPrice: updated.totalPrice } : null);
+  }, [results]);
 
   return (
     <>
     <div className="flex flex-col gap-2" style={{ fontFamily: "Georgia, serif" }}>
-      {results.map((store) => {
-        const isOpen = (selectedStore?.storeName + selectedStore?.locations[0]) === (store.storeName+store.locations[0]);
-        const isBest = store.totalPrice === minPrice;
+      {sortedResults.map((store) => {
+        const isOpen = (selectedStore?.storeName?? "" + selectedStore?.locations[0]) === (store.storeName+store.locations[0]);
+        const isBest = store.totalPrice === minPrice && store.products.length === maxItems;
         const saving = isBest ? null : (store.totalPrice - minPrice).toFixed(2);
         const isPreferred = store.locations.some(l => preferredLocations.has(l));
+        const isEdited = isStoreEdited(store);
 
         return (
           <div
@@ -37,7 +60,9 @@ const StoreResults = ({ results, onPriceChange ,preferredLocations = new Set() }
               rounded-2xl cursor-pointer transition-all duration-300 overflow-hidden bg-white
               ${isOpen
                 ? "border border-stone-400 shadow-md"
-                : "border border-stone-200 shadow-sm hover:border-stone-300"
+                : isEdited
+                  ? "border border-blue-200 shadow-sm hover:border-blue-300"
+                  : "border border-stone-200 shadow-sm hover:border-stone-300"
               }
             `}
           >
@@ -69,9 +94,14 @@ const StoreResults = ({ results, onPriceChange ,preferredLocations = new Set() }
                         Best deal
                       </span>
                     )}
+                    {isEdited && (
+                      <span className="bg-blue-50 text-blue-500 border border-blue-200 font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ fontSize: "9px" }}>
+                        Edited
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-stone-400 mt-0.5">
-                    {store.products.length} items found
+                    {getStoreItemCount(store)} items found
                   </p>
                 </div>
               </div>
@@ -104,8 +134,10 @@ const StoreResults = ({ results, onPriceChange ,preferredLocations = new Set() }
     {selectedStore && (
               <StoreDetailsSheet
                 store={selectedStore}
-                onPriceChange={handlePriceChange}
+                onPriceChange={onPriceChange}
                 onClose={() => setSelectedStore(null)}
+                onResetStore={onResetStore}
+                isProductEdited={isProductEdited}
               />
       )}
     </>
