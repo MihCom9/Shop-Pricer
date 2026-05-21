@@ -1,29 +1,40 @@
+
 import ProductCart from "./ProductCart/ProductCart";
 import { ShoppingCart, Plus, Search, SlidersHorizontal } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import ProductDisplay from "./ProductDisplay/ProductDisplay";
 import StoreResults from "./StoreResults/StoreResults";
 import { supabase } from "../../../lib/supabase";
 import AdvancedSearch from "./AdvancedSearch/AdvancedSearch";
+import type { CartItem, DisplayResultProduct, Filters, ShoppingProduct, ShoppingProductResult, StoreResult } from "../types";
+import type { SearchRequestItem } from "../../../types";
 
 
-export const DEFAULT_FILTERS = {
+export const DEFAULT_FILTERS: Filters = {
     city: "68134",       // Sofia
     maxDistance: null,   // no limit
     stores: [],          // all chains
     sortBy: "price",     // cheapest first
 };
 
-export default function ShoppingList({ cart, setCart }) {
+interface ShoppingListProps {
+    cart: SearchRequestItem[]
+    setCart: React.Dispatch<React.SetStateAction<SearchRequestItem[]>>
+}
+
+
+export default function ShoppingList({ cart, setCart }: ShoppingListProps) {
     const [searchLoading, setSearchLoading] = useState(false);
-    const [result, setResult] = useState(null);
+    const [result, setResult] = useState<StoreResult[] | null>(null);
+    const [originalResult, setOriginalResult] = useState<StoreResult[] | null>(null);
+    const [error, setError] = useState<string | null>(null)
     const [showModal, setShowModal] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
-    const [preferredLocations, setPreferredLocations] = useState(new Set());
-    const [filters, setFilters] = useState(DEFAULT_FILTERS);
-    const preferredLocationsRef = useRef(new Set());
+    const [preferredLocations, setPreferredLocations] = useState<Set<string>>(new Set());
+    const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
+    const preferredLocationsRef = useRef<Set<string>>(new Set());
 
-    const activeFilterCount = [
+    const activeFilterCount: number = [
         filters.city !== DEFAULT_FILTERS.city,
         filters.maxDistance !== null,
         filters.stores.length > 0,
@@ -46,25 +57,70 @@ export default function ShoppingList({ cart, setCart }) {
         });
     }, []);
 
-    const onPriceChange=(store, product, alt) => {
-        setResult(prev => prev.map(s =>
+    const onPriceChange=useCallback((store: StoreResult, productId: string, alt: DisplayResultProduct): void => {
+        setResult(prev => prev?.map(s =>
         s.storeName + s.locations[0] === store.storeName + store.locations[0]
             ? { ...s, totalPrice: store.totalPrice,
-                 products: s.products.map(p =>
-                        p.id === product.id ?
-                        {...p, id: alt.id,
-                            price:        alt.price,
-                            productName:  alt.name,
-                            measurements: alt.size,
-                            pricePromotion : alt.pricePromotion} : p
+                 products: s.products.map(p => {
+                            console.log(p.product?.id, p.id === productId, alt.id);
+                            if(p.id !== productId) return p;
+                            if(p.product){
+                                return {...p, product: {...p.product, id: alt.id,
+                                        price:        alt.price,
+                                        productName:  alt.name,
+                                        measurements: alt.size,
+                                        pricePromotion : alt.pricePromotion}};
+                            }else{
+                                return {
+                                    ...p, product: {
+                                        id: alt.id,
+                                        productName: alt.name,
+                                        priceInfo: {
+                                            price: alt.price,
+                                            pricePromotion: alt.pricePromotion,
+                                            effectivePrice: alt.effPrice,
+                                            discountPercent: 0,
+                                            pricePerKg: null,
+                                            savings: 0
+                                        },
+                                        measurements: alt.size,
+                                        weightBased: false,
+                                        history: null
+                                    } as ShoppingProduct 
+                                }
+                            }
+
+                        }
                 )}
             : s
-        ));
-    };
+        )?? null);
+    },[]);
 
-    const saveHistoryFromResults = (results) => {
+    const isStoreEdited = useCallback((store: StoreResult): boolean => {
+        const originalStore = originalResult?.find( s => s.storeName + s.locations[0] === store.storeName + store.locations[0]);
+        if(!originalStore) return false;
+        return store.products.some((p, i) => p.product?.id !== originalStore.products[i]?.product?.id);
+    },[originalResult]);
+
+    const isProductEdited = useCallback((storeKey: string, productId: number): boolean => {
+        const originalStore = originalResult?.find( s => s.storeName + s.locations[0] === storeKey);
+        if(!originalStore) return false;
+        return !originalStore.products.some(p => p.product?.id === productId);
+    },[originalResult]);
+
+    const handleReset = useCallback(() => {
+        setResult(originalResult);
+    },[originalResult]);
+
+    const handleResetStore = useCallback((storeKey: string): void => {
+        const originalStore = originalResult?.find( s => s.storeName + s.locations[0] === storeKey);
+        if(!originalStore) return;
+        setResult(prev => prev?.map(s => s.storeName + s.locations[0] === storeKey? originalStore : s)?? null);
+    },[originalResult]);
+
+    const saveHistoryFromResults = (results: StoreResult[]): void => {
         const raw = localStorage.getItem('shopHistory');
-        const history = raw ? JSON.parse(raw) : { stores: [], categories: [] };
+        const history: { stores: string[]; categories: string[] } = raw ? JSON.parse(raw) : { stores: [], categories: [] };
         results.forEach(r => {
             if (r.storeName && !history.stores.includes(r.storeName))
                 history.stores.push(r.storeName);
@@ -78,19 +134,20 @@ export default function ShoppingList({ cart, setCart }) {
         localStorage.setItem('shopHistory', JSON.stringify(history));
     };
 
-    const toWeightGrams = (weightAmount, weightUnit) => {
+    const toWeightGrams = (weightAmount: string, weightUnit: string | undefined): number | null => {
         if (!weightUnit || !weightAmount) return null;
         const n = parseFloat(weightAmount);
         if (!n || n <= 0) return null;
         return (weightUnit === 'кг' || weightUnit === 'л') ? n * 1000 : n;
     };
 
-    const findCheapest = async () => {
+    const findCheapest = async (): Promise<void> => {
         if (cart.length === 0) return;
         setSearchLoading(true);
         setResult(null);
+        setError(null);
 
-        const body = cart.map(item => ({
+        const body: CartItem[] = cart.map(item => ({
             name: item.details,
             category: item.category,
             brand: null,
@@ -107,7 +164,7 @@ export default function ShoppingList({ cart, setCart }) {
                 body: JSON.stringify(body)
             }
             );
-            const data = await response.json();
+            const data: StoreResult[] = await response.json();
             const preferred = preferredLocationsRef.current;
             if (Array.isArray(data) && preferred.size > 0) {
                 data.sort((a, b) => {
@@ -119,14 +176,21 @@ export default function ShoppingList({ cart, setCart }) {
             }
             console.log(data);
             setResult(data);
+            setOriginalResult(data);
             if (Array.isArray(data)) saveHistoryFromResults(data);
         } catch (error) {
             console.error("Error finding cheapest store:", error);
-            setResult({ error: "Failed to find cheapest store. Please try again." });
+            setResult(null);
+            setOriginalResult(null);
+            setError("Failed to find cheapest store. Please try again.")
         } finally {
             setSearchLoading(false);
         }
     };
+
+    useEffect(() => {
+        console.log(originalResult);
+    },[originalResult]);
 
     return(
         <div className="min-h-screen bg-stone-50 p-8" style={{ fontFamily: 'Georgia, serif' }}>
@@ -207,9 +271,15 @@ export default function ShoppingList({ cart, setCart }) {
                 </button>
 
                 {/* Result */}
-                    {result?.length > 0 ? (
+                    {!error && result && (result?.length ?? 0)  > 0 ? (
                         <div className="mt-2">
-                            <StoreResults results={result} onPriceChange={onPriceChange} preferredLocations={preferredLocations} />
+                            <StoreResults results={result} 
+                                onPriceChange={onPriceChange}
+                                preferredLocations={preferredLocations} 
+                                isStoreEdited={isStoreEdited}
+                                onResetStore={handleResetStore}
+                                isProductEdited={isProductEdited}
+                             />
                         </div>
                     ) : (
                         <div className="bg-white border border-stone-200 rounded-2xl p-16 text-center mt-4">
