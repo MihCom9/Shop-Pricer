@@ -4,16 +4,11 @@ import java.util.List;
 
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.server.ResponseStatusException;
 
-import com.example.demo.data.repository.ProductRepository;
-import com.example.demo.model.Shopping.PromotionItem;
+import com.example.demo.model.response.Browse.PromotionItem;
+import com.example.demo.repository.ProductRepository;
 import com.example.demo.service.shopping.PromotionService;
-import com.example.demo.service.shopping.ShoppingService;
 
 @Service
 public class ProductTools {

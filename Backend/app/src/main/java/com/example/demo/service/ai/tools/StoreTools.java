@@ -5,18 +5,19 @@ import java.util.List;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
-import com.example.demo.data.repository.StoresRepository;
-import com.example.demo.model.City.CityInfo;
+import com.example.demo.model.projection.City.CityInfo;
+import com.example.demo.repository.CityRepository;
+import com.example.demo.repository.StoreRepository;
 
 @Service
 public class StoreTools {
-    private final StoresRepository storesRepository;
+    private final StoreRepository storesRepository;
+    private final CityRepository cityRepository;
 
-    public StoreTools(StoresRepository storesRepository){
+    public StoreTools(StoreRepository storesRepository, CityRepository cityRepository){
         this.storesRepository = storesRepository;
+        this.cityRepository = cityRepository;
     }
 
     // @GetMapping("/stores")
@@ -51,6 +52,6 @@ public class StoreTools {
 
     @Tool(description = "Get all available cities with their ekatte codes. Use this when the user mentions a city by name so you can get the correct ekatte code to use in other tools.")
     public List<CityInfo> getCities(){
-        return storesRepository.findAllCities();
+        return cityRepository.findAllCities();
     }
 }
