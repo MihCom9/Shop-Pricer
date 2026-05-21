@@ -2,18 +2,28 @@ import { useEffect, useState } from "react";
 import {
   X, Star, ShoppingBag, MapPin, TrendingDown,
   AlertTriangle, CheckCircle,
+  RotateCcw,
 } from "lucide-react";
 import ProductsTab from "./ProductTab/ProductTab";
 import StoreInfoTab from "./StoreInfoTab/StoreInfoTab";
 import HistoryTab from "./HistoryTab/HistoryTab";
+import type { DisplayResultProduct, ShoppingProductResult, StoreResult } from "../../../types";
+import type { SelectedStore } from "../types";
+import type { StoreDetailsProduct } from "./types";
 
-const fmt = (n) => Number(n).toFixed(2);
+const fmt = (n: number) => Number(n).toFixed(2);
 
-const isRealPromo = (promo) => promo != null && Number(promo) > 0;
+const isRealPromo = (promo: number | null) => promo != null && Number(promo) > 0;
 
 // ─── SummaryPill ─────────────────────────────────────────────────────────────
 
-function SummaryPill({ icon, label, variant = "neutral" }) {
+interface SummaryPillProps {
+  icon: React.ReactNode;
+  label: string;
+  variant?: "neutral" | "green" | "amber" | "red"; // optional since it has a default
+}
+
+function SummaryPill({ icon, label, variant = "neutral" }: SummaryPillProps) {
   const variants = {
     neutral: "bg-stone-100 border-stone-200 text-stone-500",
     green:   "bg-green-50 border-green-200 text-green-700",
@@ -32,30 +42,47 @@ function SummaryPill({ icon, label, variant = "neutral" }) {
 
 // ─── StoreDetailsSheet ────────────────────────────────────────────────────────
 
-export default function StoreDetailsSheet({ store, onPriceChange , onClose }) {
-  const [tab, setTab] = useState("products");
+interface StoreDetailsProps {
+  store: SelectedStore
+  onPriceChange: (store: StoreResult, productId: string, alt: DisplayResultProduct) => void
+  onClose: () => void
+  onResetStore: (storeKey: string) => void
+  isProductEdited: (storeKey: string, productId: number) => boolean
+}
 
-  const products = store.products.map((p) => ({
-    id : p.id,
+export default function StoreDetailsSheet({ store, onPriceChange , onClose, onResetStore, isProductEdited }: StoreDetailsProps) {
+  const [tab, setTab] = useState<"products" | "history" | "info">("products");
+
+  const products: StoreDetailsProduct[] = store.products.map((p) => (p.product? {
+    id: p.id,
+    productId : p.product.id,
     cartItem:     p.cartItem,
-    matched:      p.productName,
-    measurements: p.measurements ?? "—",
-    history:      p.history ?? Array(8).fill(p.price),
-    price:        p.price,
-    promo:        p.pricePromotion ?? null,
+    matched:      p.product.productName,
+    measurements: p.product.measurements ?? "—",
+    history:      p.product.history ?? Array(8).fill(p.product.priceInfo.effectivePrice),
+    price:        p.product.priceInfo.price,
+    promo:        p.product.priceInfo.pricePromotion ?? null,
     mismatch:     !!p.sizeMismatch,
+    missing: false,
+  } : 
+  {
+    id: p.id,
+    cartItem: p.cartItem,
+    mismatch: false,
+    missing: true,
   }));
 
-  const [altState, setAltState] = useState(products.map(() => null));
+  const [altState, setAltState] = useState<(DisplayResultProduct | null)[]>(products.map(() => null));
 
   const mismatches  = products.filter((p) => p.mismatch).length;
   const totalItems  = products.length;
+  const foundItems = store.storeSummary.foundProductCount;
 
   const TABS = [
     { id: "products", label: "Products" },
     { id: "history",  label: "Price history" },
     { id: "info",     label: "Store info" },
-  ];
+  ]as const;
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -133,13 +160,13 @@ export default function StoreDetailsSheet({ store, onPriceChange , onClose }) {
           <div className="flex items-center gap-2 mt-3 flex-wrap">
             <SummaryPill
               icon={<CheckCircle size={12} />}
-              label={`${totalItems} of ${totalItems} items found`}
+              label={`${foundItems} of ${totalItems} items found`}
               variant="green"
             />
-            {store.savingsVsAvg > 0 && (
+            {store.storeSummary.savingsVsAvg > 0 && store.storeSummary.foundProductCount === store.storeSummary.totalProductCount && (
               <SummaryPill
                 icon={<TrendingDown size={12} />}
-                label={`Saves ${fmt(store.savingsVsAvg)} € vs avg`}
+                label={`Saves ${fmt(store.storeSummary.savingsVsAvg)} € vs avg`}
                 variant="green"
               />
             )}
@@ -176,7 +203,7 @@ export default function StoreDetailsSheet({ store, onPriceChange , onClose }) {
             <ProductsTab
               products={products}
               altState={altState}
-              setAltState={(updater) => {
+              setAltState={(updater: (prev: (DisplayResultProduct | null)[]) => (DisplayResultProduct | null)[]) => {
                 setAltState((prev) => {
                   const next = updater(prev);
                   const changedIndex = next.findIndex((v, i) => v !== prev[i]);
@@ -184,21 +211,39 @@ export default function StoreDetailsSheet({ store, onPriceChange , onClose }) {
                   const product = products[changedIndex];
 
                   const newTotal = products.reduce((sum, p, i) => {
+                    if (p.missing) return sum;
                     const a = next[i];
-                    return sum + (a ? a.effPrice : (isRealPromo(p.promo) && p.promo < p.price ?  p.promo : p.price));
+                    return sum + (a ? a.effPrice : (p.promo && isRealPromo(p.promo) && p.promo < p.price ?  p.promo : p.price));
                   }, 0);
-
-                  onPriceChange({...store, totalPrice: newTotal}, product, alt);
+                  if (!product || !alt) return next;
+                  console.log(product.id);
+                  onPriceChange({...store, totalPrice: newTotal}, product.id, alt);
                   return next;
                 });
               }}
               storeName={store.storeName}
               storeLocation={store.locations?.[0]}
+              isProductEdited={isProductEdited}
             />
           )}
           {tab === "history" && <HistoryTab products={products} />}
           {tab === "info"    && <StoreInfoTab store={store} />}
         </div>
+          {onResetStore && (
+            <div className="flex items-center justify-end px-5 py-3 border-t border-stone-100 flex-shrink-0">
+              <button
+                onClick={() => {
+                  onResetStore(store.storeName + store.locations?.[0]);
+                  setAltState(products.map(() => null));
+                  onClose();
+                }}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-blue-200 bg-blue-50 text-blue-500 hover:bg-blue-100 transition-colors text-sm"
+              >
+                <RotateCcw size={13} />
+                Reset changes
+              </button>
+            </div>
+          )}
       </div>
     </div>
   );
