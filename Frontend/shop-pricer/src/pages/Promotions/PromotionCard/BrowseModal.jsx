@@ -3,11 +3,11 @@ import { X, Tag, MapPin, ShoppingCart, ExternalLink } from 'lucide-react';
 export default function BrowseModal({ promotion, onClose, onAddToCart }) {
   if (!promotion) return null;
 
-  const hasPromo = promotion.pricePromotion != null
-    && promotion.pricePromotion < promotion.price
-    && promotion.pricePromotion > 0;
+  const hasPromo = promotion.priceInfo.pricePromotion != null
+    && promotion.priceInfo.pricePromotion < promotion.priceInfo.price
+    && promotion.priceInfo.pricePromotion > 0;
   const saving = hasPromo
-    ? (promotion.price - promotion.pricePromotion).toFixed(2)
+    ? (promotion.price - promotion.priceInfo.pricePromotion).toFixed(2)
     : null;
 
   return (
@@ -72,13 +72,13 @@ export default function BrowseModal({ promotion, onClose, onAddToCart }) {
         <div className="flex items-baseline gap-3">
           <span className="text-3xl font-bold text-stone-800">
             {hasPromo
-              ? promotion.pricePromotion.toFixed(2)
-              : promotion.price.toFixed(2)} €
+              ? promotion.priceInfo.pricePromotion.toFixed(2)
+              : promotion.priceInfo.price.toFixed(2)} €
           </span>
           {hasPromo && (
             <div className="flex flex-col">
               <span className="text-sm text-stone-300 line-through">
-                {promotion.price.toFixed(2)} €
+                {promotion.priceInfo.price.toFixed(2)} €
               </span>
               <span className="text-sm text-red-400 font-medium">
                 saves {saving} €

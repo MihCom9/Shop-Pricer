@@ -1,16 +1,18 @@
 package com.example.demo.service.shopping;
 
-import com.example.demo.data.Product;
-import com.example.demo.data.ProductType;
-import com.example.demo.data.repository.ProductRepository;
-import com.example.demo.data.repository.ProductTypeRepository;
-import com.example.demo.model.SearchProduct;
-import com.example.demo.model.Shopping.ProductResult;
-import com.example.demo.model.Shopping.StoreResult;
+import com.example.demo.entity.Product;
+import com.example.demo.entity.ProductType;
+import com.example.demo.model.common.StoreSummary;
+import com.example.demo.model.request.Shopping.SearchProduct;
+import com.example.demo.model.response.Product.ProductResult;
+import com.example.demo.model.response.Shopping.ShoppingProductResult;
+import com.example.demo.model.response.Shopping.StoreResult;
+import com.example.demo.repository.ProductSearchRepository;
+import com.example.demo.repository.ProductTypeRepository;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -19,7 +21,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -28,20 +29,15 @@ public class ShoppingService {
 
     private static final String LOG_FILE_PATH = "/logs/appStoreResults.log";
 
-    private static final Pattern WEIGHT_PATTERN = Pattern.compile(
-        "(\\d+(?:[,.]\\d+)?)\\s*(КГ|ГР|Л|МЛ)",
-        Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-    );
-
     @PersistenceContext
     private EntityManager entityManager;
 
-    private final ProductRepository productRepository;
+    private final ProductSearchRepository productSearchRepository;
     private final ProductTypeRepository productTypeRepository;
 
-    public ShoppingService(ProductRepository productRepository,
+    public ShoppingService(ProductSearchRepository productSearchRepository,
                            ProductTypeRepository productTypeRepository) {
-        this.productRepository = productRepository;
+        this.productSearchRepository = productSearchRepository;
         this.productTypeRepository = productTypeRepository;
     }
 
@@ -59,35 +55,59 @@ public class ShoppingService {
         Map<String, BigDecimal> storeTotals = computeStoreTotals(storeProductPrices, shoppingList.size());
         logStoreCompleteness(storeProductPrices, shoppingList.size());
         saveStoreResultsInFile(storeProductPrices, shoppingList.size());
-
         List<StoreResult> results = buildStoreResults(storeTotals, storeProductPrices, productToRequestedGrams, productToCartItemName);
         results.sort(Comparator
-    .comparingInt((StoreResult sr) -> sr.getProducts().size() >= shoppingList.size() ? 0 : 1)
-    .thenComparing(StoreResult::hasSizeMismatch)
-    .thenComparing(StoreResult::getTotalPrice));
+            .comparingInt((StoreResult sr) -> sr.getProducts().size() >= shoppingList.size() ? 0 : 1)
+            .thenComparing(StoreResult::hasSizeMismatch)
+            .thenComparing(StoreResult::getTotalPrice));
+        for (StoreResult storeResult : results) {
+            Set<SearchProduct> found = storeResult.getProducts().stream()
+                .map(ShoppingProductResult::getCartItem)
+                .collect(Collectors.toSet());
+
+            for (SearchProduct sp : shoppingList) {
+                if (!found.contains(sp)) {
+                    storeResult.addProduct(sp);
+                }
+            }
+        }
         if (results.isEmpty()) {
             throw new NoSuchElementException("No stores carry all requested products");
         }
         BigDecimal avgStorePrice = computeAverageStorePrice(results);
         BigDecimal bestPrice = results.get(0).getTotalPrice();
-        updateStoreResults(results, avgStorePrice, bestPrice);
+        updateStoreResults(results, avgStorePrice, bestPrice, shoppingList.size());
         logTopStoreResults(results, storeProductPrices);
         return results;
     }
 
-    public List<ProductResult> findAlts(String name, String category, String store,String location, String city, Integer quantity,Double weightGrams){
+    public List<ProductResult> findAlts(String name, String category, String store,String location, String city, Integer quantity, Double weightGrams, boolean isFound){
         ProductType code   = resolveCategory(category);
-        List<ProductResult> alts = productRepository.findAltsForProduct(city, code.getCode().toString(), store, location, name, 5, 0)
+        List<ProductResult> alts = new ArrayList<>();
+        if(isFound){
+            alts = productSearchRepository.findAltsForProduct(city, code.getCode().toString(), store, location, name, 5, 0)
+                .stream()
+                .map(p -> new ProductResult(
+                    p.getProductName(),
+                    p.getPriceAsDecimal(),
+                    p.getPricePromotionAsDecimal(),
+                    p.getMeasurements(),
+                    p.getId()
+                ))
+                .collect(Collectors.toList());
+        }
+        if(alts.isEmpty()){
+            alts = productSearchRepository.findTopByCategoryAndStore(city, code.getCode().toString(), store, location, 5, 0)
             .stream()
-            .map(p -> new ProductResult(
-                p.getProductName(),
-                p.getPriceAsDecimal(),
-                p.getPricePromotionAsDecimal(),
-                p.getMeasurements(),
-                p.getId()
-            ))
-            .collect(Collectors.toList());
-
+                .map(p -> new ProductResult(
+                    p.getProductName(),
+                    p.getPriceAsDecimal(),
+                    p.getPricePromotionAsDecimal(),
+                    p.getMeasurements(),
+                    p.getId()
+                ))
+                .collect(Collectors.toList());
+        }
         return alts;
     }
 
@@ -124,8 +144,8 @@ public class ShoppingService {
     private List<Product> fetchProducts(String city, ProductType category, String searchName) {
         String code = category.getCode().toString();
         return (searchName != null)
-            ? productRepository.findMatchingProductsNew(city, code, searchName)
-            : productRepository.findMatchingProductsEmptyName(city, code);
+            ? productSearchRepository.findMatchingProductsNew(city, code, searchName)
+            : productSearchRepository.findMatchingProductsEmptyName(city, code);
     }
 
     /**
@@ -245,30 +265,23 @@ public class ShoppingService {
         return total.divide(new BigDecimal(results.size()), 2, RoundingMode.HALF_UP);
     }
 
-    private void updateStoreResults(List<StoreResult> results, BigDecimal avgStorePrice, BigDecimal bestPrice){
-        for (StoreResult storeResult : results) {
-            storeResult.setIsBest(storeResult.getTotalPrice().compareTo(bestPrice) == 0);
-            storeResult.setSavingsVsAvg(avgStorePrice.subtract(storeResult.getTotalPrice()));
-        }
+    private void updateStoreResults(List<StoreResult> results, BigDecimal avgStorePrice, BigDecimal bestPrice, int totalProductCount) {
+    for (StoreResult sr : results) {
+        boolean isBest       = sr.getTotalPrice().compareTo(bestPrice) == 0;
+        BigDecimal vsAvg     = avgStorePrice.subtract(sr.getTotalPrice());
+        BigDecimal vsBest    = sr.getTotalPrice().subtract(bestPrice);
+        int foundCount       = (int) sr.getProducts().stream().filter(ShoppingProductResult::isFound).count();
+
+        sr.setStoreSummary(new StoreSummary(
+            sr.getTotalPrice(),
+            totalProductCount,
+            foundCount,
+            isBest,
+            vsAvg,
+            vsBest
+        ));
     }
-
-    // ── Utility: weight extraction ────────────────────────────────────────────
-
-    private double extractWeightGrams(String text) {
-        Matcher m = WEIGHT_PATTERN.matcher(text.toUpperCase());
-        if (!m.find()) return Double.MAX_VALUE;
-
-        double val  = Double.parseDouble(m.group(1).replace(",", "."));
-        String unit = m.group(2).toUpperCase();
-        return (unit.equals("КГ") || unit.equals("Л")) ? val * 1000 : val;
-    }
-
-    private double extractProductWeightGrams(Product p) {
-        String text = (p.getMeasurements() != null && !p.getMeasurements().isBlank())
-            ? p.getMeasurements() + " " + p.getProductName()
-            : p.getProductName();
-        return extractWeightGrams(text);
-    }
+}
 
     // ── Utility: string normalization ─────────────────────────────────────────
 

@@ -8,7 +8,9 @@ export default function HistoryTab({ products }) {
   return (
     <div className="flex flex-col gap-5">
       {products.map((p, pi) => {
-        const hist = p.history;
+        if(p.missing) return null;
+        const hist = p.history?? [];
+        if(hist.lenht === 0) return null;
         const minP = Math.min(...hist);
         const maxP = Math.max(...hist);
         return (

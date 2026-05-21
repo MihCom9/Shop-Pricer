@@ -11,8 +11,8 @@ export default function PromotionCard({ promotion, onAddToCart, onCardClick }) {
     setTimeout(() => setAdded(false), 1500);
   };
 
-  const hasPromo = promotion.pricePromotion != null && promotion.pricePromotion < promotion.price && promotion.pricePromotion > 0;
-  const saving = hasPromo ? (promotion.price - promotion.pricePromotion).toFixed(2) : null;
+  const hasPromo = promotion.priceInfo.pricePromotion != null && promotion.priceInfo.pricePromotion < promotion.priceInfo.price && promotion.priceInfo.pricePromotion > 0;
+  const saving = hasPromo ? (promotion.priceInfo.price - promotion.priceInfo.pricePromotion).toFixed(2) : null;
 
   return (
     <div 
@@ -59,12 +59,12 @@ export default function PromotionCard({ promotion, onAddToCart, onCardClick }) {
       {/* Price row */}
       <div className="flex items-baseline gap-2">
         <span className="text-lg font-bold text-stone-800">
-          {hasPromo ? promotion.pricePromotion.toFixed(2) : promotion.price.toFixed(2)} €
+          {hasPromo ? promotion.priceInfo.pricePromotion.toFixed(2) : promotion.priceInfo.price.toFixed(2)} €
         </span>
         {hasPromo && (
           <>
             <span className="text-sm text-stone-300 line-through">
-              {promotion.price.toFixed(2)} €
+              {promotion.priceInfo.price.toFixed(2)} €
             </span>
             <span className="text-xs text-red-400 ml-auto">-{saving} €</span>
           </>

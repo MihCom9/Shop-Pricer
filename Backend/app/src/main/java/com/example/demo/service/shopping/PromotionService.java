@@ -3,9 +3,6 @@ package com.example.demo.service.shopping;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,22 +10,18 @@ import org.springframework.data.domain.Sort;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import com.example.demo.data.ProductType;
-import com.example.demo.data.repository.ProductRepository;
-import com.example.demo.data.repository.ProductTypeRepository;
-import com.example.demo.data.repository.PromotionProjection;
-import com.example.demo.data.repository.PromotionProjectionMaterialized;
-import com.example.demo.model.Shopping.ProductResult;
-import com.example.demo.model.Shopping.PromotionItem;
-import com.example.demo.model.Shopping.StoreResult;
+import com.example.demo.model.projection.Browse.PromotionProjectionMaterialized;
+import com.example.demo.model.response.Browse.PromotionItem;
+import com.example.demo.repository.BrowseRepository;
+import com.example.demo.repository.ProductTypeRepository;
 
 @Service
 public class PromotionService {
-    private final ProductRepository productRepository;
+    private final BrowseRepository browseRepository;
     private final ProductTypeRepository productTypeRepository;
 
-    public PromotionService(ProductRepository productRepository, ProductTypeRepository productTypeRepository) {
-        this.productRepository = productRepository;
+    public PromotionService(BrowseRepository browseRepository, ProductTypeRepository productTypeRepository) {
+        this.browseRepository = browseRepository;
         this.productTypeRepository = productTypeRepository;
     }
     // const SORT_OPTIONS = [
@@ -78,7 +71,7 @@ public class PromotionService {
                     .map(pt -> pt.getCode().toString())
                     .orElse(null); // if not found by name, pass it as-is (maybe it's already a code)
         }
-        List<PromotionProjectionMaterialized> rows = productRepository.browseProductsMaterialized(
+        List<PromotionProjectionMaterialized> rows = browseRepository.browseProductsMaterialized(
             city,
             (store != null && !store.isBlank()) ? store : null,
             categoryCode,
@@ -120,6 +113,6 @@ public class PromotionService {
     }
 
     public long getPromotionsCount(String city, String store,String storeLocation ,String category, String search, int minDiscount){
-        return productRepository.countPromotions(city, store, category, search, minDiscount);
+        return browseRepository.countPromotions(city, store, category, search, minDiscount);
     }
 }

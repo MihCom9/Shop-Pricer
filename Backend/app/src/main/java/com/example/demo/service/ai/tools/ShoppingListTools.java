@@ -7,8 +7,8 @@ import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
 
-import com.example.demo.model.SearchProduct;
-import com.example.demo.model.Shopping.StoreResult;
+import com.example.demo.model.request.Shopping.SearchProduct;
+import com.example.demo.model.response.Shopping.StoreResult;
 import com.example.demo.service.shopping.ShoppingService;
 
 @Service
