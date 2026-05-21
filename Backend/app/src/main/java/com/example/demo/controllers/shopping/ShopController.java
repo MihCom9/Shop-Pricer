@@ -1,11 +1,10 @@
-package com.example.demo.controllers.Shopping;
+package com.example.demo.controllers.shopping;
 
-import com.example.demo.data.repository.ProductRepository;
-import com.example.demo.model.SearchProduct;
-import com.example.demo.model.Category.CategoryInfo;
-import com.example.demo.model.Shopping.ProductResult;
-import com.example.demo.model.Shopping.PromotionItem;
-import com.example.demo.model.Shopping.StoreResult;
+import com.example.demo.model.projection.Category.CategoryInfo;
+import com.example.demo.model.request.Shopping.SearchProduct;
+import com.example.demo.model.response.Product.ProductResult;
+import com.example.demo.model.response.Shopping.StoreResult;
+import com.example.demo.repository.ProductRepository;
 import com.example.demo.service.shopping.ShoppingService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,9 +52,10 @@ public class ShopController {
         @RequestParam String location,
         @RequestParam String city,
         @RequestParam(required = false) Integer quantity,
-        @RequestParam(required = false) Double weightGrams
+        @RequestParam(required = false) Double weightGrams,
+        @RequestParam(required = false, defaultValue = "true") boolean isFound
     ){
-        return shoppingService.findAlts(name, category, store, location, city, quantity, weightGrams);
+        return shoppingService.findAlts(name, category, store, location, city, quantity, weightGrams, isFound);
     }
 
     @GetMapping("/categories/names")

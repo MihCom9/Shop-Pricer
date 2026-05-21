@@ -1,4 +1,4 @@
-package com.example.demo.controllers.Stores;
+package com.example.demo.controllers.store;
 
 import java.util.List;
 
@@ -9,17 +9,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.demo.data.repository.StoresRepository;
-import com.example.demo.model.City.CityInfo;
+import com.example.demo.model.projection.City.CityInfo;
+import com.example.demo.repository.CityRepository;
+import com.example.demo.repository.StoreRepository;
 
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api")
-public class StoresController {
-    private final StoresRepository storesRepository;
+public class StoreController {
+    private final StoreRepository storesRepository;
+    private final CityRepository cityRepository;
+
     @Autowired
-    public StoresController(StoresRepository storesRepository){
+    public StoreController(StoreRepository storesRepository, CityRepository cityRepository){
         this.storesRepository = storesRepository;
+        this.cityRepository = cityRepository;
     }
 
     @GetMapping("/stores/count")
@@ -39,16 +43,16 @@ public class StoresController {
 
     @GetMapping("/cities")
     public List<String> getCities(){
-        return storesRepository.findAllCityNames();
+        return cityRepository.findAllCityNames();
     }
 
     @GetMapping("/cities-full")
     public List<CityInfo> getCitiesFull(){
-        return storesRepository.findAllCities();
+        return cityRepository.findAllCities();
     }
     
     @GetMapping("/cities/count")
     public int getCitiesCount(){
-        return storesRepository.getCitiesCount();
+        return cityRepository.getCitiesCount();
     }
 }

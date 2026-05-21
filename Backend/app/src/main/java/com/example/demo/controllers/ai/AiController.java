@@ -1,4 +1,4 @@
-package com.example.demo.controllers.Ai;
+package com.example.demo.controllers.ai;
 
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;

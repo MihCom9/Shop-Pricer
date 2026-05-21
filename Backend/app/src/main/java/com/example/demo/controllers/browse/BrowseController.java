@@ -1,4 +1,4 @@
-package com.example.demo.controllers.Promotion;
+package com.example.demo.controllers.browse;
 
 import java.util.List;
 
@@ -11,18 +11,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.example.demo.model.Shopping.ProductResult;
-import com.example.demo.model.Shopping.PromotionItem;
+import com.example.demo.model.response.Browse.PromotionItem;
 import com.example.demo.service.shopping.PromotionService;
 
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api")
-public class PromotionController {
+public class BrowseController {
     private final PromotionService promotionService;
 
     @Autowired
-    public PromotionController(PromotionService promotionService) {
+    public BrowseController(PromotionService promotionService) {
         this.promotionService = promotionService;
     }
     

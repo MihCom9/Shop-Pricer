@@ -2,7 +2,7 @@ package com.example.demo.controllers;
 
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.demo.model.SearchProduct;
+import com.example.demo.model.request.Shopping.SearchProduct;
 
 import java.util.List;
 

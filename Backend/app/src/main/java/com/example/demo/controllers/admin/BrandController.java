@@ -1,18 +1,14 @@
-package com.example.demo.controllers.Admin;
+package com.example.demo.controllers.admin;
 
-import com.example.demo.data.ProductType;
-import com.example.demo.data.repository.ProductTypeRepository;
-import com.example.demo.model.Admin.CreateProductTypeAliasRequest;
-import com.example.demo.model.Admin.CreateProductTypeRequest;
+import com.example.demo.entity.ProductType;
+import com.example.demo.model.request.CreateProductTypeRequest;
 import com.example.demo.service.admin.BrandExtractor;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
