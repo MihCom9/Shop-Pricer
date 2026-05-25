@@ -1,3 +1,5 @@
+import type { StoreResult } from "./pages/Search/types";
+
 export interface SearchRequestItem {
     id: string;
     details: string;
@@ -13,4 +15,7 @@ export interface ShoppingListStructure {
     items: SearchRequestItem[];
     starred: boolean;
     createdAt: string;
+    lastResults: StoreResult[] | null;
+    lastOriginalResults: StoreResult[] | null;
+    lastResultsAt: string | null;
 }

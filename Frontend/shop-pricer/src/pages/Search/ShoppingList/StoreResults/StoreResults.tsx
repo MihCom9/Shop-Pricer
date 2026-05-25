@@ -3,6 +3,7 @@ import { ChevronDown, ShoppingBag, Trophy } from "lucide-react";
 import StoreDetailsSheet from "./StoreDetails/StoreDetailsSheet";
 import type { DisplayResultProduct, StoreResult } from "../../types";
 import type { SelectedStore } from "./types";
+import StoreResultsSummary from "./Summary/StoreResultsSummary";
 
 interface StoreResultProps {
   results: StoreResult[]
@@ -38,6 +39,12 @@ const StoreResults = ({ results, onPriceChange ,preferredLocations = new Set(), 
   return (
     <>
     <div className="flex flex-col gap-2" style={{ fontFamily: "Georgia, serif" }}>
+
+      {/* Summary header + bar strip */}
+      <StoreResultsSummary 
+        results={sortedResults} 
+        />
+
       {sortedResults.map((store) => {
         const isOpen = (selectedStore?.storeName?? "" + selectedStore?.locations[0]) === (store.storeName+store.locations[0]);
         const isBest = store.totalPrice === minPrice && store.products.length === maxItems;

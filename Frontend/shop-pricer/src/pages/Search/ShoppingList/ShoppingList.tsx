@@ -20,13 +20,16 @@ export const DEFAULT_FILTERS: Filters = {
 interface ShoppingListProps {
     cart: SearchRequestItem[]
     setCart: React.Dispatch<React.SetStateAction<SearchRequestItem[]>>
+    lastResults: StoreResult[] | null
+    originalResults: StoreResult[] | null
+    lastResultsAt: string | null
+    setLastResults: (results: StoreResult[] | null, original: StoreResult[] | null) => void
 }
 
 
-export default function ShoppingList({ cart, setCart }: ShoppingListProps) {
+export default function ShoppingList({ cart, setCart, lastResults, originalResults, lastResultsAt, setLastResults }: ShoppingListProps) {
     const [searchLoading, setSearchLoading] = useState(false);
-    const [result, setResult] = useState<StoreResult[] | null>(null);
-    const [originalResult, setOriginalResult] = useState<StoreResult[] | null>(null);
+    const [result, setResult] = useState<StoreResult[] | null>(lastResults);
     const [error, setError] = useState<string | null>(null)
     const [showModal, setShowModal] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
@@ -56,6 +59,11 @@ export default function ShoppingList({ cart, setCart }: ShoppingListProps) {
             }
         });
     }, []);
+
+    useEffect(() => {
+        if (!result || result.length === 0) return;
+        setLastResults(result, originalResults);
+    }, [result]);
 
     const onPriceChange=useCallback((store: StoreResult, productId: string, alt: DisplayResultProduct): void => {
         setResult(prev => prev?.map(s =>
@@ -97,26 +105,26 @@ export default function ShoppingList({ cart, setCart }: ShoppingListProps) {
     },[]);
 
     const isStoreEdited = useCallback((store: StoreResult): boolean => {
-        const originalStore = originalResult?.find( s => s.storeName + s.locations[0] === store.storeName + store.locations[0]);
+        const originalStore = originalResults?.find( s => s.storeName + s.locations[0] === store.storeName + store.locations[0]);
         if(!originalStore) return false;
         return store.products.some((p, i) => p.product?.id !== originalStore.products[i]?.product?.id);
-    },[originalResult]);
+    },[originalResults]);
 
     const isProductEdited = useCallback((storeKey: string, productId: number): boolean => {
-        const originalStore = originalResult?.find( s => s.storeName + s.locations[0] === storeKey);
+        const originalStore = originalResults?.find( s => s.storeName + s.locations[0] === storeKey);
         if(!originalStore) return false;
         return !originalStore.products.some(p => p.product?.id === productId);
-    },[originalResult]);
+    },[originalResults]);
 
     const handleReset = useCallback(() => {
-        setResult(originalResult);
-    },[originalResult]);
+        setResult(originalResults);
+    },[originalResults]);
 
     const handleResetStore = useCallback((storeKey: string): void => {
-        const originalStore = originalResult?.find( s => s.storeName + s.locations[0] === storeKey);
+        const originalStore = originalResults?.find( s => s.storeName + s.locations[0] === storeKey);
         if(!originalStore) return;
         setResult(prev => prev?.map(s => s.storeName + s.locations[0] === storeKey? originalStore : s)?? null);
-    },[originalResult]);
+    },[originalResults]);
 
     const saveHistoryFromResults = (results: StoreResult[]): void => {
         const raw = localStorage.getItem('shopHistory');
@@ -176,12 +184,12 @@ export default function ShoppingList({ cart, setCart }: ShoppingListProps) {
             }
             console.log(data);
             setResult(data);
-            setOriginalResult(data);
+            setLastResults(data, data);
             if (Array.isArray(data)) saveHistoryFromResults(data);
         } catch (error) {
             console.error("Error finding cheapest store:", error);
             setResult(null);
-            setOriginalResult(null);
+            setLastResults(null, null);
             setError("Failed to find cheapest store. Please try again.")
         } finally {
             setSearchLoading(false);
@@ -189,8 +197,8 @@ export default function ShoppingList({ cart, setCart }: ShoppingListProps) {
     };
 
     useEffect(() => {
-        console.log(originalResult);
-    },[originalResult]);
+        console.log(originalResults);
+    },[originalResults]);
 
     return(
         <div className="min-h-screen bg-stone-50 p-8" style={{ fontFamily: 'Georgia, serif' }}>

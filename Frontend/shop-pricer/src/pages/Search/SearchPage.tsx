@@ -3,6 +3,7 @@ import { ShoppingCart, Plus, Star, Trash2, ChevronRight, ListChecks, SquarePen, 
 import ShoppingList from "./ShoppingList/ShoppingList";
 import type { ShoppingListStructure, SearchRequestItem } from "../../types";
 import ShoppingListCreateForm from "./ListCreateForm/ShoppingListCreateForm";
+import type { StoreResult } from "./types";
 
 interface SearchPageProps {
     shoppingLists: ShoppingListStructure[];
@@ -50,6 +51,9 @@ export default function SearchPage({
             items: items?? [],
             starred: starred,
             createdAt: new Date().toISOString(),
+            lastResults: null,
+            lastOriginalResults: null,
+            lastResultsAt: null
         };
         setShoppingLists((prev) => [newList, ...prev]);
         selectList(newList.id);
@@ -104,7 +108,8 @@ export default function SearchPage({
     const exportList = (list: ShoppingListStructure): void => {
         if(!list) return;
         const fileName = list.name.replace(/[/\\?%*:|"<>]/g, "-");
-        const json =  JSON.stringify(list, null, 2);
+        const { lastResults, lastOriginalResults, lastResultsAt, ...sendList } = list;
+        const json =  JSON.stringify(sendList, null, 2);
         const blob=new Blob([json],{type:'application/json'});
         const href = URL.createObjectURL(blob);
         const link = document.createElement("a");
@@ -120,6 +125,18 @@ export default function SearchPage({
         if (a.starred !== b.starred) return a.starred ? -1 : 1;
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
+
+    const setResultsForSelected = (results: StoreResult[] | null, original: StoreResult[] | null) => {
+        if (!selectedListId) return;
+        setShoppingLists(prev => prev.map(list =>
+            list.id !== selectedListId ? list : {
+                ...list,
+                lastResults: results,
+                lastOriginalResults: original,
+                lastResultsAt: new Date().toISOString()
+            }
+        ));
+    };
 
 
     useEffect(() => {
@@ -174,6 +191,10 @@ export default function SearchPage({
                 <ShoppingList
                     cart={selectedList.items}
                     setCart={setCartForSelected}
+                    lastResults={selectedList.lastResults}
+                    originalResults={selectedList.lastOriginalResults}
+                    lastResultsAt={selectedList.lastResultsAt}
+                    setLastResults={setResultsForSelected}
                 />
             </div>
         );
