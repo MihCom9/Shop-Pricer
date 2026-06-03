@@ -55,6 +55,7 @@ function ProductCard({ product, missing, selectedAlt, onSelectAlt, storeName, st
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
+  const isEdited = isProductEdited(storeName?? "" + storeLocation, product.productid);
   const altRef = useRef(null);
   const LIMIT = 5;
 
@@ -108,7 +109,7 @@ function ProductCard({ product, missing, selectedAlt, onSelectAlt, storeName, st
   return (
     <div className={`border rounded-xl overflow-hidden transition-all ${
       open ? "border-stone-300 shadow-sm"
-        : selectedAlt ? "border-blue-200 shadow-sm"
+        : selectedAlt || isEdited ? "border-blue-200 shadow-sm"
         : missing ? "border-red-200"
         : "border-stone-200"
     }`}>

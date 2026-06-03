@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import { useState, useEffect } from "react";
+import ComboSelect from "../../../../components/Select/ComboSelect";
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
@@ -70,15 +71,12 @@ export default function AdvancedSearch({ open, onClose, filters, setFilters }) {
                     {citiesLoading ? (
                         <div className="w-full h-9 bg-stone-100 rounded-xl animate-pulse" />
                     ) : (
-                        <select
+                        <ComboSelect 
+                            options={cities}
                             value={filters.city}
-                            onChange={e => setFilters(f => ({ ...f, city: e.target.value }))}
-                            className="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm text-stone-700 bg-stone-50 focus:outline-none focus:ring-1 focus:ring-stone-400"
-                        >
-                            {cities.map(c => (
-                                <option key={c.ekatte} value={c.ekatte}>{c.name}</option>
-                            ))}
-                        </select>
+                            onChange={val => setFilters(f => ({...f, city: val}))}
+                            placeholder="Select city"
+                        />
                     )}
                 </div>
 
