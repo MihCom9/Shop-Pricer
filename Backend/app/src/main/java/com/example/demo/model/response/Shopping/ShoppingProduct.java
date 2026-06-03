@@ -11,6 +11,7 @@ import com.example.demo.model.response.Product.ProductResult;
 public class ShoppingProduct extends ProductResult {
     private boolean weightBased;
     private List<BigDecimal> history;
+    private Integer matchTier;             // "exact" or "fallback"
 
 
     // Matches fixed quantities: 500ГР, 1КГ, 1Л, 500МЛ, 5БР
@@ -28,6 +29,7 @@ public class ShoppingProduct extends ProductResult {
         super(product);
         parseMeasurements(product.getMeasurements(), product.getProductName());
         this.history = null;
+        this.matchTier = product.getMatchTier();
     }
 
     private void parseMeasurements(String dbMeasurements, String name) {
@@ -67,6 +69,10 @@ public class ShoppingProduct extends ProductResult {
 
     public List<BigDecimal> getHistory() {
         return history;
+    }
+
+    public Integer getMatchTier() {
+        return matchTier;
     }
     
 }

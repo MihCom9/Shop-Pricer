@@ -8,6 +8,7 @@ import { supabase } from "../../../lib/supabase";
 import AdvancedSearch from "./AdvancedSearch/AdvancedSearch";
 import type { CartItem, DisplayResultProduct, Filters, ShoppingProduct, ShoppingProductResult, StoreResult } from "../types";
 import type { SearchRequestItem } from "../../../types";
+import ProductCartNew from "./ProductCart/ProductCartNew";
 
 
 export const DEFAULT_FILTERS: Filters = {
@@ -20,16 +21,20 @@ export const DEFAULT_FILTERS: Filters = {
 interface ShoppingListProps {
     cart: SearchRequestItem[]
     setCart: React.Dispatch<React.SetStateAction<SearchRequestItem[]>>
+    lastResults: StoreResult[] | null
+    originalResults: StoreResult[] | null
+    lastResultsAt: string | null
+    setLastResults: (results: StoreResult[] | null, original: StoreResult[] | null) => void
 }
 
 
-export default function ShoppingList({ cart, setCart }: ShoppingListProps) {
+export default function ShoppingList({ cart, setCart, lastResults, originalResults, lastResultsAt, setLastResults }: ShoppingListProps) {
     const [searchLoading, setSearchLoading] = useState(false);
-    const [result, setResult] = useState<StoreResult[] | null>(null);
-    const [originalResult, setOriginalResult] = useState<StoreResult[] | null>(null);
+    const [result, setResult] = useState<StoreResult[] | null>(lastResults);
     const [error, setError] = useState<string | null>(null)
     const [showModal, setShowModal] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
+    const [activeTab, setActiveTab] = useState<"list" | "results">(lastResults ? "results" : "list");
     const [preferredLocations, setPreferredLocations] = useState<Set<string>>(new Set());
     const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
     const preferredLocationsRef = useRef<Set<string>>(new Set());
@@ -56,6 +61,11 @@ export default function ShoppingList({ cart, setCart }: ShoppingListProps) {
             }
         });
     }, []);
+
+    useEffect(() => {
+        if (!result || result.length === 0) return;
+        setLastResults(result, originalResults);
+    }, [result]);
 
     const onPriceChange=useCallback((store: StoreResult, productId: string, alt: DisplayResultProduct): void => {
         setResult(prev => prev?.map(s =>
@@ -97,26 +107,26 @@ export default function ShoppingList({ cart, setCart }: ShoppingListProps) {
     },[]);
 
     const isStoreEdited = useCallback((store: StoreResult): boolean => {
-        const originalStore = originalResult?.find( s => s.storeName + s.locations[0] === store.storeName + store.locations[0]);
+        const originalStore = originalResults?.find( s => s.storeName + s.locations[0] === store.storeName + store.locations[0]);
         if(!originalStore) return false;
         return store.products.some((p, i) => p.product?.id !== originalStore.products[i]?.product?.id);
-    },[originalResult]);
+    },[originalResults]);
 
     const isProductEdited = useCallback((storeKey: string, productId: number): boolean => {
-        const originalStore = originalResult?.find( s => s.storeName + s.locations[0] === storeKey);
+        const originalStore = originalResults?.find( s => s.storeName + s.locations[0] === storeKey);
         if(!originalStore) return false;
         return !originalStore.products.some(p => p.product?.id === productId);
-    },[originalResult]);
+    },[originalResults]);
 
     const handleReset = useCallback(() => {
-        setResult(originalResult);
-    },[originalResult]);
+        setResult(originalResults);
+    },[originalResults]);
 
     const handleResetStore = useCallback((storeKey: string): void => {
-        const originalStore = originalResult?.find( s => s.storeName + s.locations[0] === storeKey);
+        const originalStore = originalResults?.find( s => s.storeName + s.locations[0] === storeKey);
         if(!originalStore) return;
         setResult(prev => prev?.map(s => s.storeName + s.locations[0] === storeKey? originalStore : s)?? null);
-    },[originalResult]);
+    },[originalResults]);
 
     const saveHistoryFromResults = (results: StoreResult[]): void => {
         const raw = localStorage.getItem('shopHistory');
@@ -176,12 +186,13 @@ export default function ShoppingList({ cart, setCart }: ShoppingListProps) {
             }
             console.log(data);
             setResult(data);
-            setOriginalResult(data);
+            setLastResults(data, data);
             if (Array.isArray(data)) saveHistoryFromResults(data);
+            setActiveTab("results");
         } catch (error) {
             console.error("Error finding cheapest store:", error);
             setResult(null);
-            setOriginalResult(null);
+            setLastResults(null, null);
             setError("Failed to find cheapest store. Please try again.")
         } finally {
             setSearchLoading(false);
@@ -189,21 +200,20 @@ export default function ShoppingList({ cart, setCart }: ShoppingListProps) {
     };
 
     useEffect(() => {
-        console.log(originalResult);
-    },[originalResult]);
+        console.log(originalResults);
+    },[originalResults]);
 
     return(
         <div className="min-h-screen bg-stone-50 p-8" style={{ fontFamily: 'Georgia, serif' }}>
             <div className="max-w-2xl mx-auto">
                 {/* Header */}
-                <div className="bg-white border border-stone-200 rounded-2xl shadow-sm p-8 mb-6">
+                <div className="bg-white border border-stone-200 rounded-2xl shadow-sm p-8 mb-4">
                     <div className="flex items-center justify-between">
                         <div>
-                        <h1 className="text-3xl font-bold text-stone-800">Shopping List</h1>
-                        <p className="text-stone-400 mt-1">We'll find you the cheapest store</p>
+                            <h1 className="text-3xl font-bold text-stone-800">Shopping List</h1>
+                            <p className="text-stone-400 mt-1">We'll find you the cheapest store</p>
                         </div>
                         <div className="flex items-center gap-2">
-                            {/* Filter toggle button */}
                             <button
                                 onClick={() => setShowFilters(v => !v)}
                                 className={`relative px-4 py-3 rounded-xl border transition-all flex items-center gap-2 text-sm ${
@@ -220,7 +230,6 @@ export default function ShoppingList({ cart, setCart }: ShoppingListProps) {
                                     </span>
                                 )}
                             </button>
- 
                             <button
                                 onClick={() => setShowModal(true)}
                                 className="bg-stone-800 hover:bg-stone-700 text-white px-5 py-3 rounded-xl flex items-center gap-2 transition-all"
@@ -230,64 +239,122 @@ export default function ShoppingList({ cart, setCart }: ShoppingListProps) {
                         </div>
                     </div>
                 </div>
+
+                {/* Tabs */}
+                <div className="flex border-b border-stone-200 mb-6">
+                    <button
+                        onClick={() => setActiveTab("list")}
+                        className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                            activeTab === "list"
+                                ? "text-stone-800 border-stone-800"
+                                : "text-stone-400 border-transparent hover:text-stone-600"
+                        }`}
+                    >
+                        My List
+                        {cart.length > 0 && (
+                            <span className={`ml-2 text-xs px-1.5 py-0.5 rounded-full ${activeTab === "list" ? "bg-stone-800 text-white" : "bg-stone-100 text-stone-500"}`}>
+                                {cart.length}
+                            </span>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("results")}
+                        className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                            activeTab === "results"
+                                ? "text-stone-800 border-stone-800"
+                                : "text-stone-400 border-transparent hover:text-stone-600"
+                        }`}
+                    >
+                        Results
+                        {result && result.length > 0 && (
+                            <span className={`ml-2 text-xs px-1.5 py-0.5 rounded-full ${activeTab === "results" ? "bg-stone-800 text-white" : "bg-stone-100 text-stone-500"}`}>
+                                {result.length}
+                            </span>
+                        )}
+                    </button>
+                </div>
+
                 <AdvancedSearch
                     open={showFilters}
                     onClose={() => setShowFilters(false)}
                     filters={filters}
                     setFilters={setFilters}
                 />
-                <ProductCart setCart={setCart} showModal={showModal} setShowModal={setShowModal} />
+                <ProductCartNew setCart={setCart} showModal={showModal} setShowModal={setShowModal} />
 
-                {/* Cart Items */}
-                <div className="space-y-3">
-                    {cart.length === 0 ? (
-                        <div className="bg-white border border-stone-200 rounded-2xl p-16 text-center">
-                        <ShoppingCart className="mx-auto text-stone-200 mb-4" size={56} />
-                        <p className="text-stone-400 text-lg">Your list is empty</p>
-                        <p className="text-stone-300 text-sm mt-1">Add products to compare store prices</p>
+                {/* My List tab */}
+                {activeTab === "list" && (
+                    <>
+                        <div className="space-y-3">
+                            {cart.length === 0 ? (
+                                <div className="bg-white border border-stone-200 rounded-2xl p-16 text-center">
+                                    <ShoppingCart className="mx-auto text-stone-200 mb-4" size={56} />
+                                    <p className="text-stone-400 text-lg">Your list is empty</p>
+                                    <p className="text-stone-300 text-sm mt-1">Add products to compare store prices</p>
+                                </div>
+                            ) : (
+                                cart.map(item => (
+                                    <ProductDisplay key={item.id} item={item} setCart={setCart} />
+                                ))
+                            )}
                         </div>
-                    ) : (
-                        <>
-                        {cart.map(item => (
-                            <ProductDisplay key={item.id} item={item} setCart={setCart} />
-                        ))}
-                        </>
-                    )}
-                </div>
-                {/* Find Cheapest Button */}
-                <button onClick={findCheapest} disabled={searchLoading}
-                className="w-full bg-stone-800 hover:bg-stone-700 disabled:bg-stone-300 text-white py-4 rounded-xl mt-4 transition-all flex items-center justify-center gap-2 font-medium"
-                >
-                    {searchLoading ? (
-                        <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-                        Searching stores...
-                        </>
-                    ) : (
-                        <>
-                        <Search size={18} /> Find Cheapest Store
-                        </>
-                    )}
-                </button>
+                        <button
+                            onClick={findCheapest}
+                            disabled={searchLoading || cart.length === 0}
+                            className="w-full bg-stone-800 hover:bg-stone-700 disabled:bg-stone-300 text-white py-4 rounded-xl mt-4 transition-all flex items-center justify-center gap-2 font-medium"
+                        >
+                            {searchLoading ? (
+                                <>
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                                    Searching stores...
+                                </>
+                            ) : (
+                                <>
+                                    <Search size={18} /> Find Cheapest Store
+                                </>
+                            )}
+                        </button>
+                    </>
+                )}
 
-                {/* Result */}
-                    {!error && result && (result?.length ?? 0)  > 0 ? (
-                        <div className="mt-2">
-                            <StoreResults results={result} 
+                {/* Results tab */}
+                {activeTab === "results" && (
+                    <>
+                        {searchLoading ? (
+                            <div className="bg-white border border-stone-200 rounded-2xl p-16 text-center">
+                                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-stone-800 mx-auto mb-4" />
+                                <p className="text-stone-400">Searching stores...</p>
+                            </div>
+                        ) : error ? (
+                            <div className="bg-white border border-stone-200 rounded-2xl p-16 text-center">
+                                <Search className="mx-auto text-stone-200 mb-4" size={56} />
+                                <p className="text-stone-400 text-lg">Something went wrong</p>
+                                <p className="text-stone-300 text-sm mt-1">{error}</p>
+                            </div>
+                        ) : result && result.length > 0 ? (
+                            <StoreResults
+                                results={result}
                                 onPriceChange={onPriceChange}
-                                preferredLocations={preferredLocations} 
+                                preferredLocations={preferredLocations}
                                 isStoreEdited={isStoreEdited}
                                 onResetStore={handleResetStore}
                                 isProductEdited={isProductEdited}
-                             />
-                        </div>
-                    ) : (
-                        <div className="bg-white border border-stone-200 rounded-2xl p-16 text-center mt-4">
-                            <Search className="mx-auto text-stone-200 mb-4" size={56} />
-                            <p className="text-stone-400 text-lg">No stores found</p>
-                            <p className="text-stone-300 text-sm mt-1">Try adjusting your search or adding different products</p>
-                        </div>
-                    )}
+                            />
+                        ) : (
+                            <div className="bg-white border border-stone-200 rounded-2xl p-16 text-center">
+                                <Search className="mx-auto text-stone-200 mb-4" size={56} />
+                                <p className="text-stone-400 text-lg">No results yet</p>
+                                <p className="text-stone-300 text-sm mt-1">Add items and search to compare store prices</p>
+                                <button
+                                    onClick={() => setActiveTab("list")}
+                                    className="mt-6 px-5 py-2.5 bg-stone-800 hover:bg-stone-700 text-white rounded-xl text-sm font-medium transition-all"
+                                >
+                                    Go to My List
+                                </button>
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
         </div>
     );

@@ -28,6 +28,7 @@ export interface ShoppingProduct {
     id: number;
     weightBased: boolean;
     history: number[] | null;
+    matchTier: number | null;
 }
 
 export interface ShoppingProductResult {
@@ -35,7 +36,6 @@ export interface ShoppingProductResult {
     cartItem: CartItem;       
     product: ShoppingProduct | null; 
     sizeMismatch: boolean;
-    matchTier: number | null;
     alts: ShoppingProduct[] | null;
 }
 
@@ -71,4 +71,5 @@ export interface DisplayResultProduct {
     effPrice: number;
     price: number;
     pricePromotion: number | null;
+    matchTier: number | null;
 }

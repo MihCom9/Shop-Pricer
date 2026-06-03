@@ -5,6 +5,7 @@ import com.example.demo.entity.ProductType;
 import com.example.demo.model.common.StoreSummary;
 import com.example.demo.model.request.Shopping.SearchProduct;
 import com.example.demo.model.response.Product.ProductResult;
+import com.example.demo.model.response.Shopping.ShoppingProduct;
 import com.example.demo.model.response.Shopping.ShoppingProductResult;
 import com.example.demo.model.response.Shopping.StoreResult;
 import com.example.demo.repository.ProductSearchRepository;
@@ -81,31 +82,25 @@ public class ShoppingService {
         return results;
     }
 
-    public List<ProductResult> findAlts(String name, String category, String store,String location, String city, Integer quantity, Double weightGrams, boolean isFound){
+    public List<ShoppingProduct> findAlts(String name, String category, String store,String location, String city, Integer quantity, Double weightGrams, boolean isFound, int limit, int offset){
+        if(limit <= 0){
+            limit = 1;
+        }
+        if(offset < 0){
+            offset = 0;
+        }
         ProductType code   = resolveCategory(category);
-        List<ProductResult> alts = new ArrayList<>();
+        List<ShoppingProduct> alts = new ArrayList<>();
         if(isFound){
-            alts = productSearchRepository.findAltsForProduct(city, code.getCode().toString(), store, location, name, 5, 0)
+            alts = productSearchRepository.findAltsForProduct(city, code.getCode().toString(), store, location, name, limit, offset)
                 .stream()
-                .map(p -> new ProductResult(
-                    p.getProductName(),
-                    p.getPriceAsDecimal(),
-                    p.getPricePromotionAsDecimal(),
-                    p.getMeasurements(),
-                    p.getId()
-                ))
+                .map(ShoppingProduct::new)
                 .collect(Collectors.toList());
         }
         if(alts.isEmpty()){
-            alts = productSearchRepository.findTopByCategoryAndStore(city, code.getCode().toString(), store, location, 5, 0)
+            alts = productSearchRepository.findTopByCategoryAndStore(city, code.getCode().toString(), store, location, limit, offset)
             .stream()
-                .map(p -> new ProductResult(
-                    p.getProductName(),
-                    p.getPriceAsDecimal(),
-                    p.getPricePromotionAsDecimal(),
-                    p.getMeasurements(),
-                    p.getId()
-                ))
+                .map(ShoppingProduct::new)
                 .collect(Collectors.toList());
         }
         return alts;
