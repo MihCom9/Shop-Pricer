@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase';
 import PromotionFilter from './PromotionFilter/PromotionFilter';
 import BrowseModal from './PromotionCard/BrowseModal';
 import SelectListModal from './SelectList/SelectListModal';
+import BrowseFilter from './PromotionFilter/BrowseFilter';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 const PAGE_SIZE = 40;
@@ -20,8 +21,8 @@ export default function PromotionsPage({ shoppingLists, setShoppingLists }) {
     storeLocation: searchParams.get('storeLocation') ?? '',
     category: searchParams.get('category') ?? '',
     minDiscount: Number(searchParams.get('minDiscount') ?? 0),
-    sort: searchParams.get('sort') ?? '',
-    show: searchParams.get('show') ?? '',
+    sort: searchParams.get('sort') ?? 'discount',
+    show: searchParams.get('show') ?? 'all',
   };
 
   const [promotions, setPromotions] = useState([]);
@@ -230,7 +231,7 @@ export default function PromotionsPage({ shoppingLists, setShoppingLists }) {
         </div>
 
         {/* Filter */}
-        <PromotionFilter filters={filters} 
+        <BrowseFilter filters={filters} 
             onClear={() => {setSearchParams({})}}
             onChange={(key, value) => updateFilter(key,value)}
             />
