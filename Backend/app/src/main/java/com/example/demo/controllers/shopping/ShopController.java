@@ -3,6 +3,7 @@ package com.example.demo.controllers.shopping;
 import com.example.demo.model.projection.Category.CategoryInfo;
 import com.example.demo.model.request.Shopping.SearchProduct;
 import com.example.demo.model.response.Product.ProductResult;
+import com.example.demo.model.response.Shopping.ShoppingProduct;
 import com.example.demo.model.response.Shopping.StoreResult;
 import com.example.demo.repository.ProductRepository;
 import com.example.demo.service.shopping.ShoppingService;
@@ -45,7 +46,7 @@ public class ShopController {
     }
 
     @GetMapping("/alts")
-    public List<ProductResult> findAlts(
+    public List<ShoppingProduct> findAlts(
         @RequestParam String name,
         @RequestParam String category,
         @RequestParam String store,
@@ -53,9 +54,11 @@ public class ShopController {
         @RequestParam String city,
         @RequestParam(required = false) Integer quantity,
         @RequestParam(required = false) Double weightGrams,
-        @RequestParam(required = false, defaultValue = "true") boolean isFound
+        @RequestParam(required = false, defaultValue = "true") boolean isFound,
+        @RequestParam(required = false, defaultValue = "5") int limit,
+        @RequestParam(required = false, defaultValue = "0") int offset
     ){
-        return shoppingService.findAlts(name, category, store, location, city, quantity, weightGrams, isFound);
+        return shoppingService.findAlts(name, category, store, location, city, quantity, weightGrams, isFound, limit, offset);
     }
 
     @GetMapping("/categories/names")

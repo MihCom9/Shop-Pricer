@@ -14,7 +14,6 @@ public class ShoppingProductResult {
     private SearchProduct cartItem;
     private ShoppingProduct product;
     private boolean sizeMismatch;
-    private Integer matchTier;             // "exact" or "fallback"
     private List<ShoppingProduct> alts;
 
     public ShoppingProductResult(){
@@ -22,7 +21,6 @@ public class ShoppingProductResult {
         cartItem = null;
         product = null;
         sizeMismatch = false; 
-        this.matchTier = null;
         this.alts = null;
     }
 
@@ -31,7 +29,6 @@ public class ShoppingProductResult {
         this.cartItem = cartItem;
         this.product = null;
         this.sizeMismatch = false;
-        this.matchTier = null;
         this.alts = null;
     }
 
@@ -40,7 +37,6 @@ public class ShoppingProductResult {
         this.cartItem = cartItem;
         this.product = new ShoppingProduct(product);
         this.sizeMismatch = computeSizeMismatch(requestedGrams);
-        this.matchTier = product.getMatchTier();
         this.alts = null;
     }
 
@@ -76,10 +72,6 @@ public class ShoppingProductResult {
     @JsonIgnore
     public boolean isFound() {
         return product != null;
-    }
-
-    public Integer getMatchTier() {
-        return matchTier;
     }
 
     public List<ShoppingProduct> getAlts() {

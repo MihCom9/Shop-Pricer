@@ -13,7 +13,7 @@ RETRY_INTERVAL = 1800        # 30 minutes
 MAX_RETRIES = 16
 
 # Compute yesterday's date
-yesterday = (datetime.today() - timedelta(days=3)).strftime("%Y-%m-%d")
+yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
 file_url = f"{BASE_URL}{yesterday}.zip"
 def saveOldContent(backup_dir, save_dir):
     os.makedirs(backup_dir,exist_ok=True)

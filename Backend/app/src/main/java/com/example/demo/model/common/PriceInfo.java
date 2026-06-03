@@ -34,8 +34,12 @@ public class PriceInfo {
         if(price == null || effectivePrice == null || savings == null){
             throw new IllegalArgumentException("Constructor arguments pricec, effective price or savings cant be null");
         }
+        if(pricePromotion == null || pricePromotion.compareTo(BigDecimal.ZERO) == 0){
+            this.pricePromotion = null;
+        }else{
+            this.pricePromotion = pricePromotion;
+        }
         this.price = price;
-        this.pricePromotion = pricePromotion;
         this.effectivePrice = effectivePrice;
         this.pricePerKg = pricePerKg;
         this.discountPercent = discountPercent;
@@ -46,12 +50,16 @@ public class PriceInfo {
         if (price == null) {
             throw new IllegalArgumentException("Price cant be null");
         }
+        if(pricePromotion == null || pricePromotion.compareTo(BigDecimal.ZERO) == 0){
+            this.pricePromotion = null;
+        }else{
+            this.pricePromotion = pricePromotion;
+        }
         this.price = price;
-        this.pricePromotion = pricePromotion;
-        this.effectivePrice = pricePromotion != null ? pricePromotion : price;
-        this.discountPercent = pricePromotion != null ? calculateDiscountPercentige(price, pricePromotion) : 0.0;
+        this.effectivePrice = this.pricePromotion != null ? this.pricePromotion : this.price;
+        this.discountPercent = this.pricePromotion != null ? calculateDiscountPercentige(this.price, this.pricePromotion) : 0.0;
         this.pricePerKg = null;
-        this.savings = calculateSavings(price, this.effectivePrice);
+        this.savings = calculateSavings(this.price, this.effectivePrice);
     }
 
     public PriceInfo(Product product){
@@ -59,11 +67,12 @@ public class PriceInfo {
             throw new IllegalArgumentException("Product cant be null");
         }
         this.price = product.getPriceAsDecimal();
-        this.pricePromotion = product.getPricePromotionAsDecimal();
+        BigDecimal promo = product.getPricePromotionAsDecimal();
+        this.pricePromotion = (promo == null || promo.compareTo(BigDecimal.ZERO) == 0) ? null : promo;
         this.effectivePrice = product.getEffectivePrice();
-        this.discountPercent = pricePromotion==null? 0.0 : calculateDiscountPercentige(price, pricePromotion);
+        this.discountPercent = this.pricePromotion==null? 0.0 : calculateDiscountPercentige(this.price, this.pricePromotion);
         this.pricePerKg = null;
-        this.savings = effectivePrice != null ? calculateSavings(price, effectivePrice) : BigDecimal.ZERO;
+        this.savings = this.effectivePrice != null ? calculateSavings(this.price, this.effectivePrice) : BigDecimal.ZERO;
     }
 
     public BigDecimal getPrice() {

@@ -278,7 +278,7 @@ public interface ProductSearchRepository extends JpaRepository<Product, Long> {
             SELECT pt.id, c.ekatte AS city, sl.location AS store, s.name AS full_store_name,
                 prod.name AS product_name, prod.code AS code, cat.cid::text AS category,
                 trim(pt.price) AS price, trim(pt.price_promotion) AS price_promotion,
-                pt.measurements, 2 AS match_tier
+                pt.measurements, 3 AS match_tier
             FROM product_test pt
             JOIN products       prod ON prod.id  = pt.product_id
             JOIN store_locations sl  ON sl.id    = pt.store_id
