@@ -258,7 +258,16 @@ public interface ProductSearchRepository extends JpaRepository<Product, Long> {
             FROM word_filtered
         )
         SELECT id, city, store, full_store_name, product_name, code, category,
-            price, price_promotion, measurements, 1 AS match_tier
+            price, price_promotion, measurements, CASE
+                WHEN array_length(
+                    ARRAY(
+                        SELECT match[1]
+                        FROM regexp_matches(upper(:name), '(\\d+[.,]?\\d*\\s*(?:%|ГР|КГ|МЛ|Г|Л))', 'g') AS match
+                    ), 1
+                ) IS NULL THEN 1
+                WHEN measurement_score < 0.95 THEN 2
+                ELSE 1
+            END AS match_tier
         FROM ranked
         WHERE rn > :offset
         AND rn <= (:offset + :limit)

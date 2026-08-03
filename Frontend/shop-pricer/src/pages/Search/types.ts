@@ -4,10 +4,16 @@
 //             quantity: item.pieces ?? 1,
 //             weightGrams: toWeightGrams(item.weightAmount ? String(item.weightAmount) : '', item.weightUnit)
 
+type BrandState = "preferred" | "excluded" | "neutral";
+
+export interface BrandDto{
+    brandId: number;
+    state: BrandState;
+}
 export interface CartItem {
     name: string;
     category?: string;
-    brand: string | null;
+    brandSelections: BrandDto[] | null;
     quantity: number;
     weightGrams: number | null;
 }

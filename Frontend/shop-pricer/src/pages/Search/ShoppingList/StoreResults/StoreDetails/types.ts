@@ -9,6 +9,7 @@ interface FoundProduct {
     history: number[];
     price: number;
     promo: number | null;
+    matchTier: number | null;
     mismatch: boolean;
     missing: false;
 }

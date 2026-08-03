@@ -9,6 +9,7 @@ import SearchPage from "./pages/Search/SearchPage";
 import PromotionsPage from "./pages/Promotions/PromotionsPage";
 import AiAssistant from "./pages/Ai/AiAssistant";
 import type { SearchRequestItem, ShoppingListStructure } from "./types";
+import AdminPage from "./pages/Admin/AdminPage";
 
 function App() {
   const [scrolled, setScrolled] = useState(false);
@@ -31,11 +32,11 @@ function App() {
 
   return (
     <Router>
-      <div>
+      <div className="min-h-screen flex flex-col">
         <header className={`sticky top-0 z-50 bg-gray-50 transition-all duration-200 ${scrolled ? "py-0" : "py-2"}`}>
           <Navbar />
         </header>
-        <main className="">
+        <main className="flex-1">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/search" element={<SearchPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} 
@@ -43,6 +44,7 @@ function App() {
             <Route path="/browse" element={<PromotionsPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} />} />
             <Route path="/login" element={<Login />} />
             <Route path="/ai" element={<AiAssistant />} />
+            <Route path="/admin" element={<AdminPage />} />
           </Routes>
         </main>
       </div>

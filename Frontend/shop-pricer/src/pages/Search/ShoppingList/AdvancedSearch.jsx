@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
 import { useState, useEffect } from "react";
-import ComboSelect from "../../../../components/Select/ComboSelect";
+import ComboSelect from "../../../components/Select/ComboSelect";
 
 const API_BASE_URL = 'http://localhost:8080/api';
 

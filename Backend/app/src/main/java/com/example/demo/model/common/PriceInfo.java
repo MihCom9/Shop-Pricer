@@ -17,6 +17,9 @@ public class PriceInfo {
         if(price == null || pricePromotion == null){
             throw new IllegalArgumentException("Price and price promotion cant be null");
         }
+        if (price.compareTo(BigDecimal.ZERO) == 0) {
+            return 0.0;
+        }
         return 100.00 - (pricePromotion.multiply(BigDecimal.valueOf(100))
                             .divide(price, 10, RoundingMode.HALF_UP)
                             .doubleValue());

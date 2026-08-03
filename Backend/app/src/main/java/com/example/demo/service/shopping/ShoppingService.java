@@ -1,7 +1,7 @@
 package com.example.demo.service.shopping;
 
 import com.example.demo.entity.Product;
-import com.example.demo.entity.ProductType;
+import com.example.demo.entity.Category;
 import com.example.demo.model.common.StoreSummary;
 import com.example.demo.model.request.Shopping.SearchProduct;
 import com.example.demo.model.response.Product.ProductResult;
@@ -9,7 +9,7 @@ import com.example.demo.model.response.Shopping.ShoppingProduct;
 import com.example.demo.model.response.Shopping.ShoppingProductResult;
 import com.example.demo.model.response.Shopping.StoreResult;
 import com.example.demo.repository.ProductSearchRepository;
-import com.example.demo.repository.ProductTypeRepository;
+import com.example.demo.repository.CategoryRepository;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -34,10 +34,10 @@ public class ShoppingService {
     private EntityManager entityManager;
 
     private final ProductSearchRepository productSearchRepository;
-    private final ProductTypeRepository productTypeRepository;
+    private final CategoryRepository productTypeRepository;
 
     public ShoppingService(ProductSearchRepository productSearchRepository,
-                           ProductTypeRepository productTypeRepository) {
+                           CategoryRepository productTypeRepository) {
         this.productSearchRepository = productSearchRepository;
         this.productTypeRepository = productTypeRepository;
     }
@@ -89,7 +89,7 @@ public class ShoppingService {
         if(offset < 0){
             offset = 0;
         }
-        ProductType code   = resolveCategory(category);
+        Category code   = resolveCategory(category);
         List<ShoppingProduct> alts = new ArrayList<>();
         if(isFound){
             alts = productSearchRepository.findAltsForProduct(city, code.getCode().toString(), store, location, name, limit, offset)
@@ -108,8 +108,8 @@ public class ShoppingService {
 
     // ── Step 1: resolve category and search name ──────────────────────────────
 
-    private ProductType resolveCategory(String category) {
-        return productTypeRepository.findByProductNameIgnoreCase(category)
+    private Category resolveCategory(String category) {
+        return productTypeRepository.findByNameIgnoreCase(category)
             .orElseThrow(() -> new RuntimeException("Product type not found: " + category));
     }
 
@@ -118,17 +118,17 @@ public class ShoppingService {
      * differentiating part (e.g. a brand or variety) is passed to the query.
      * Returns {@code null} when no meaningful suffix remains.
      */
-    private String resolveSearchName(SearchProduct sp, ProductType category) {
+    private String resolveSearchName(SearchProduct sp, Category category) {
         String searchName = sp.getName();
-        if (searchName == null || category.getProductName() == null) return searchName;
+        if (searchName == null || category.getName() == null) return searchName;
 
         String normalizedSearch   = searchName.trim().toLowerCase();
-        String normalizedCategory = category.getProductName().trim().toLowerCase();
+        String normalizedCategory = category.getName().trim().toLowerCase();
 
         if (normalizedSearch.equals(normalizedCategory)) return null;
 
         String stripped = searchName
-            .replaceAll("(?i)^" + Pattern.quote(category.getProductName().trim()) + "\\s*", "")
+            .replaceAll("(?i)^" + Pattern.quote(category.getName().trim()) + "\\s*", "")
             .trim();
 
         return stripped.isEmpty() ? null : stripped;
@@ -136,7 +136,7 @@ public class ShoppingService {
 
     // ── Step 2: fetch products and pick the best one per store ────────────────
 
-    private List<Product> fetchProducts(String city, ProductType category, String searchName) {
+    private List<Product> fetchProducts(String city, Category category, String searchName) {
         String code = category.getCode().toString();
         return (searchName != null)
             ? productSearchRepository.findMatchingProductsNew(city, code, searchName)
@@ -162,7 +162,7 @@ public class ShoppingService {
 
     // ── Step 3: compute cost and accumulate into storeProductPrices ───────────
 
-    private BigDecimal computeCost(SearchProduct sp, ProductType category, Product product) {
+    private BigDecimal computeCost(SearchProduct sp, Category category, Product product) {
         if (category.isWeightBased()) {
             BigDecimal kgRequested = BigDecimal.valueOf(sp.getWeightGrams() / 1000.0);
             return product.getEffectivePrice().multiply(kgRequested);
@@ -177,7 +177,7 @@ public class ShoppingService {
             Map<Product, Double> productToRequestedGrams,
             Map<Product, SearchProduct> productToCartItemName) {
 
-        ProductType category   = resolveCategory(sp.getCategory());
+        Category category   = resolveCategory(sp.getCategory());
         String searchName      = resolveSearchName(sp, category);
         List<Product> products = fetchProducts(city, category, searchName);
 

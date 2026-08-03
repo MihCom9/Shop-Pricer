@@ -1,14 +1,14 @@
 
-import ProductCart from "./ProductCart/ProductCart";
 import { ShoppingCart, Plus, Search, SlidersHorizontal } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import ProductDisplay from "./ProductDisplay/ProductDisplay";
+import ProductDisplay from "./ProductDisplay";
 import StoreResults from "./StoreResults/StoreResults";
 import { supabase } from "../../../lib/supabase";
-import AdvancedSearch from "./AdvancedSearch/AdvancedSearch";
+import AdvancedSearch from "./AdvancedSearch";
 import type { CartItem, DisplayResultProduct, Filters, ShoppingProduct, ShoppingProductResult, StoreResult } from "../types";
 import type { SearchRequestItem } from "../../../types";
-import ProductCartNew from "./ProductCart/ProductCartNew";
+import ProductCartNew from "./ProductCartNew";
+import AddToCart from './AddProduct/AddToCart';
 
 
 export const DEFAULT_FILTERS: Filters = {
@@ -158,9 +158,9 @@ export default function ShoppingList({ cart, setCart, lastResults, originalResul
         setError(null);
 
         const body: CartItem[] = cart.map(item => ({
-            name: item.details,
+            name: [item.details, ...(item.tags ?? [])].filter(Boolean).join(" "),
             category: item.category,
-            brand: null,
+            brandSelections: item.brandSelections ?? null,
             quantity: item.pieces ?? 1,
             weightGrams: toWeightGrams(item.weightAmount ? String(item.weightAmount) : '', item.weightUnit)
         }));
@@ -211,7 +211,7 @@ export default function ShoppingList({ cart, setCart, lastResults, originalResul
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-3xl font-bold text-stone-800">Shopping List</h1>
-                            <p className="text-stone-400 mt-1">We'll find you the cheapest store</p>
+                            <p className="text-stone-400 mt-1">Your Bulgarian shopping list</p>
                         </div>
                         <div className="flex items-center gap-2">
                             <button
@@ -280,7 +280,7 @@ export default function ShoppingList({ cart, setCart, lastResults, originalResul
                     filters={filters}
                     setFilters={setFilters}
                 />
-                <ProductCartNew setCart={setCart} showModal={showModal} setShowModal={setShowModal} />
+                <AddToCart setCart={setCart} showModal={showModal} setShowModal={setShowModal} />
 
                 {/* My List tab */}
                 {activeTab === "list" && (

@@ -1,4 +1,4 @@
-import { fmt } from "../utils/util";
+import { fmt } from "../util";
 
 // ─── MiniHistoryBar ───────────────────────────────────────────────────────────
 export default function MiniHistoryBar({ history }) {

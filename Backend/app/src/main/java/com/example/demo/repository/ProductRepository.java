@@ -16,11 +16,5 @@ import com.example.demo.model.projection.Category.CategoryInfo;
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
     Slice<Product> findAllBy(Pageable page);
-    
-    @Query(value = "SELECT COALESCE(name, cid::text) FROM categories ORDER BY cid", nativeQuery = true)
-    List<String> findAllCategoryIds();
-
-    @Query(value = "SELECT COALESCE(name, cid::text) as name, unit_type as unitType FROM categories ORDER BY cid", nativeQuery = true)
-    List<CategoryInfo> findAllCategoriesWithUnitType();
 
 }

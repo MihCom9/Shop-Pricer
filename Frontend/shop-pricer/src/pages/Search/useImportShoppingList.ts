@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import type { ShoppingListStructure } from "../../../types";
+import type { ShoppingListStructure } from "../../types";
 
 const useImportShoppingList = (onImport: (list: ShoppingListStructure) => void) => {
   const fileInputRef = useRef<HTMLInputElement>(null);

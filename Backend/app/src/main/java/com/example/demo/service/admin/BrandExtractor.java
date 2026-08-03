@@ -9,9 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.entity.Product;
-import com.example.demo.entity.ProductType;
+import com.example.demo.entity.Category;
 import com.example.demo.repository.ProductRepository;
-import com.example.demo.repository.ProductTypeRepository;
+import com.example.demo.repository.CategoryRepository;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,27 +22,27 @@ import jakarta.transaction.Transactional;
 @Service
 public class BrandExtractor {
     private final ProductRepository productRepository;
-    private final ProductTypeRepository productTypeRepository;
+    private final CategoryRepository productTypeRepository;
     Logger logger = LoggerFactory.getLogger(BrandExtractor.class);
     @Autowired
     public BrandExtractor(ProductRepository productRepository,
-                        ProductTypeRepository productTypeRepository) {
+                        CategoryRepository productTypeRepository) {
         this.productRepository = productRepository;
         this.productTypeRepository = productTypeRepository;
         
     }
     @Transactional
-    public void deleteProductType(String productName) {
-        productTypeRepository.deleteByProductNameIgnoreCase(productName);
+    public void deleteCategory(String productName) {
+        productTypeRepository.deleteByNameIgnoreCase(productName);
     }
     @Transactional
-    public ProductType addProductType(Integer code, String productName){
+    public Category addCategory(Integer code, String productName){
         if(productTypeRepository.existsByCode(code)){
             new IllegalArgumentException(
-                    "ProductType with code '" + code + "' not found"
+                    "Category with code '" + code + "' not found"
             );
         }
-        ProductType pt = new ProductType(code, productName);
+        Category pt = new Category(code, productName);
             return productTypeRepository.save(pt);
     }
 }

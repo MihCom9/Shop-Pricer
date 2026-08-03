@@ -4,8 +4,8 @@ import {
   AlertTriangle, CheckCircle,
   RotateCcw,
 } from "lucide-react";
-import ProductsTab from "./ProductTab/ProductTab";
-import StoreInfoTab from "./StoreInfoTab/StoreInfoTab";
+import ProductsTab from "./ProductTab";
+import StoreInfoTab from "./StoreInfoTab";
 import HistoryTab from "./HistoryTab/HistoryTab";
 import type { DisplayResultProduct, ShoppingProductResult, StoreResult } from "../../../types";
 import type { SelectedStore } from "../types";
@@ -62,6 +62,7 @@ export default function StoreDetailsSheet({ store, onPriceChange , onClose, onRe
     history:      p.product.history ?? Array(8).fill(p.product.priceInfo.effectivePrice),
     price:        p.product.priceInfo.price,
     promo:        p.product.priceInfo.pricePromotion ?? null,
+    matchTier: p.product.matchTier,
     mismatch:     !!p.sizeMismatch,
     missing: false,
   } : 

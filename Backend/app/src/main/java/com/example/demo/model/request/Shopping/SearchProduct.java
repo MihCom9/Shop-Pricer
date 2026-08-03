@@ -1,28 +1,32 @@
 package com.example.demo.model.request.Shopping;
 
+import java.util.List;
 import java.util.Objects;
+
+import com.example.demo.model.request.common.BrandSelection;
 
 public class SearchProduct {
     private String name;
     private String category;
-    private String brand;
+    private List<BrandSelection> brandSelections;
     private Integer quantity;
     private Double weightGrams;
 
-    public SearchProduct(String name,String category,String brand,Integer quantity){
-        this.name=name;
-        this.category=category;
-        this.brand=brand;
-        this.quantity=quantity;
-
+    public SearchProduct(String name, String category, List<BrandSelection> brandSelections, Integer quantity) {
+        this.name = name;
+        this.category = category;
+        this.brandSelections = brandSelections;
+        this.quantity = quantity;
     }
+
     public String toString() {
         return "SearchProduct{" +
-               "name='" + name + '\'' +
-               ", category='" + category + '\'' +
-               ", quantity=" + quantity +
-               '}';
+                "name='" + name + '\'' +
+                ", category='" + category + '\'' +
+                ", quantity=" + quantity +
+                '}';
     }
+
     public String getName() {
         return name;
     }
@@ -39,16 +43,18 @@ public class SearchProduct {
         this.quantity = quantity;
     }
 
-    public String getBrand() {
-        return brand;
+    public List<BrandSelection> getBrandSelections() {
+        return brandSelections;
     }
 
-    public void setBrand(String brand) {
-        this.brand = brand;
+    public void setBrandSelections(List<BrandSelection> brandSelections) {
+        this.brandSelections = brandSelections;
     }
+
     public String getCategory() {
         return category;
     }
+
     public void setCategory(String category) {
         this.category = category;
     }
@@ -56,26 +62,27 @@ public class SearchProduct {
     public Double getWeightGrams() {
         return weightGrams;
     }
+
     public void setWeightGrams(Double weightGrams) {
         this.weightGrams = weightGrams;
     }
 
     @Override
-    public boolean equals(Object o){
-        if(this == o) return true;
+    public boolean equals(Object o) {
+        if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
         SearchProduct that = (SearchProduct) o;
 
         return Objects.equals(this.name, that.name) &&
-           Objects.equals(this.brand, that.brand) &&
-           Objects.equals(this.category, that.category) &&
-           Objects.equals(this.quantity, that.quantity) &&  
-           Objects.equals(this.weightGrams, that.weightGrams);
+                Objects.equals(this.brandSelections, that.brandSelections) &&
+                Objects.equals(this.category, that.category) &&
+                Objects.equals(this.quantity, that.quantity) &&
+                Objects.equals(this.weightGrams, that.weightGrams);
     }
-    
+
     @Override
     public int hashCode() {
-        return Objects.hash(name, brand, category, quantity, weightGrams);
+        return Objects.hash(name, brandSelections, category, quantity, weightGrams);
     }
 }

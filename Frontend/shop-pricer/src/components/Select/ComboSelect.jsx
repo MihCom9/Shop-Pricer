@@ -83,7 +83,7 @@ export default function ComboSelect({ options = [], value, onChange, placeholder
         createPortal(
           <div
             ref={dropdownRef}
-            className="fixed z-10 mt-1 bg-white border border-stone-200 rounded-xl shadow-md overflow-hidden"
+            className="fixed z-[60] mt-1 bg-white border border-stone-200 rounded-xl shadow-md overflow-hidden"
             style={{ top: pos.top, left: pos.left, width: pos.width }}
           >
             <Command>

@@ -3,7 +3,7 @@ import { ChevronDown, ShoppingBag, Trophy } from "lucide-react";
 import StoreDetailsSheet from "./StoreDetails/StoreDetailsSheet";
 import type { DisplayResultProduct, StoreResult } from "../../types";
 import type { SelectedStore } from "./types";
-import StoreResultsSummary from "./Summary/StoreResultsSummary";
+import StoreResultsSummary from "./StoreResultsSummary";
 
 interface StoreResultProps {
   results: StoreResult[]
