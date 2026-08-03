@@ -7,17 +7,18 @@ import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.model.response.Browse.PromotionItem;
+import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.ProductRepository;
 import com.example.demo.service.shopping.PromotionService;
 
 @Service
 public class ProductTools {
     private final PromotionService promotionService;
-    private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
 
-    public ProductTools(PromotionService promotionService, ProductRepository productRepository){
+    public ProductTools(PromotionService promotionService, CategoryRepository categoryRepository){
         this.promotionService = promotionService;
-        this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     @Tool(description = """
@@ -77,6 +78,6 @@ public class ProductTools {
     Always call this before filtering by category or building a shopping list.
     """)
     public List<String> getCategories(){
-        return productRepository.findAllCategoryIds();
+        return categoryRepository.findAllCategoryIds();
     }
 }

@@ -1,6 +1,6 @@
 package com.example.demo.controllers.admin;
 
-import com.example.demo.entity.ProductType;
+import com.example.demo.entity.Category;
 import com.example.demo.model.request.CreateProductTypeRequest;
 import com.example.demo.service.admin.BrandExtractor;
 
@@ -23,7 +23,7 @@ public class BrandController {
     @PostMapping("/admin/product-types")
     public ResponseEntity<?> addProductType(@RequestBody CreateProductTypeRequest req) {
         try{
-            ProductType pt= brandExtractor.addProductType(req.getCode(), req.getProductName());
+            Category pt= brandExtractor.addCategory(req.getCode(), req.getProductName());
             return ResponseEntity.ok(pt);
         }catch(IllegalArgumentException e){
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -31,7 +31,7 @@ public class BrandController {
     }
     @DeleteMapping("/admin/product-types/{code}")
     public ResponseEntity<Void> delete(@PathVariable String code) {
-            brandExtractor.deleteProductType(code);
+            brandExtractor.deleteCategory(code);
         return ResponseEntity.noContent().build();
     }
 }

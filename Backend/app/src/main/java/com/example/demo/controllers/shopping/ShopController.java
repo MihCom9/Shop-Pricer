@@ -60,14 +60,5 @@ public class ShopController {
     ){
         return shoppingService.findAlts(name, category, store, location, city, quantity, weightGrams, isFound, limit, offset);
     }
-
-    @GetMapping("/categories/names")
-    public List<String> getCategoryNames(){
-        return productRepository.findAllCategoryIds();
-    }
-    @GetMapping("/categories")
-    public List<CategoryInfo> getCategoryFull(){
-        return productRepository.findAllCategoriesWithUnitType();
-    }
 }
 

@@ -1,24 +1,22 @@
 package com.example.demo.entity;
 
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "categories")
-public class ProductType {
+public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,19 +25,31 @@ public class ProductType {
     private Integer code;  // 1,2,3,4
 
     @Column(length = 255, name="name")
-    private String productName;
+    private String name;
 
     @Column(nullable = false, length = 25, name="unit_type")
     private String unitType;
 
-    // @Column(name = "created_at", nullable = false, updatable = false)
-    // private LocalDateTime createdAt = LocalDateTime.now();
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "category_brands",
+        joinColumns = @JoinColumn(name = "category_id"),
+        inverseJoinColumns = @JoinColumn(name = "brand_id")
+    )
+    private Set<Brand> brands = new HashSet<>();
 
-    protected ProductType(){}
+    protected Category(){}
 
-    public ProductType(Integer code, String productName) {
+    public Category(Long id, Integer code, String name, String unitType) {
+        this.id = id;
         this.code = code;
-        this.productName=productName;
+        this.name = name;
+        this.unitType = unitType;
+    }
+
+    public Category(Integer code, String name) {
+        this.code = code;
+        this.name = name;
     }
 
     public Long getId() {
@@ -50,23 +60,20 @@ public class ProductType {
         return code;
     }
 
-    public void setCode(Integer code) {
-        this.code = code;
-    }
-
-    public String getProductName() {
-        return productName;
-    }
-
-    public void setProductName(String productName) {
-        this.productName = productName;
+    public String getName() {
+        return name;
     }
 
     public String getUnitType() {
         return unitType;
     }
-    
+
     public boolean isWeightBased() {
         return "weight".equals(unitType);
     }
+
+    public Set<Brand> getBrands() {
+        return brands;
+    }
+
 }

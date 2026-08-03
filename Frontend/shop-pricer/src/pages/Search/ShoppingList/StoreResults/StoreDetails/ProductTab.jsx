@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import MiniHistoryBar from "../HistoryTab/MiniHistoryBar";
+import MiniHistoryBar from "./HistoryTab/MiniHistoryBar";
 import { ChevronDown, Tag } from "lucide-react";
-import { fmt } from "../utils/util";
+import { fmt } from "./util";
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
@@ -31,7 +31,9 @@ function AltRow({ alt, selected, onSelect }) {
         </div>
         <div className="min-w-0">
           <p className="text-xs text-stone-700 truncate">{alt.name}</p>
-          <span className="text-xs text-stone-400">{alt.size ?? "—"}</span>
+          <span className={`text-xs ${alt.matchTier === 2? "text-amber-400" : "text-stone-400"}`}>
+            {alt.matchTier === 2 && alt?.size !== "—" ? "~" : ""}{alt.size ?? "—"}
+            </span>
         </div>
       </div>
       <div className="text-right ml-3 flex-shrink-0">
@@ -65,7 +67,8 @@ function ProductCard({ product, missing, selectedAlt, onSelectAlt, storeName, st
     size: product.measurements ?? "—",
     effPrice: product.promo && product.promo < product.price && product.promo > 0 ? product.promo : product.price,
     price: product.price,
-    pricePromotion: product.promo
+    pricePromotion: product.promo,
+    matchTier: product.matchTier
   });
 
   const hasPromo = displayProduct?.pricePromotion &&
@@ -143,10 +146,10 @@ function ProductCard({ product, missing, selectedAlt, onSelectAlt, storeName, st
             {!missing && (
               <div className="flex items-center gap-1.5 mt-1">
                 <span className={`text-xs px-1.5 py-0.5 rounded border ${
-                  product.mismatch ? "bg-amber-50 border-amber-200 text-amber-700"
+                  displayProduct?.matchTier === 2 ? "bg-amber-50 border-amber-200 text-amber-700"
                     : "bg-stone-50 border-stone-200 text-stone-400"
                 }`}>
-                  {product.mismatch ? "~" : ""}{displayProduct?.size}
+                  {displayProduct?.matchTier === 2 && displayProduct?.size !== "—" ? "~" : ""}{displayProduct?.size}
                 </span>
               </div>
             )}
@@ -186,7 +189,7 @@ function ProductCard({ product, missing, selectedAlt, onSelectAlt, storeName, st
                   const isSelected = selectedAlt ? selectedAlt.id === a.id : (!missing && product.productId === a.id);
                   return (
                     <AltRow key={ai}
-                      alt={{ name: a.productName, size: a.measurements ?? "—", effPrice: a.priceInfo.effectivePrice, price: a.priceInfo.price, pricePromotion: a.priceInfo.pricePromotion }}
+                      alt={{ name: a.productName, size: a.measurements ?? "—", effPrice: a.priceInfo.effectivePrice, price: a.priceInfo.price, pricePromotion: a.priceInfo.pricePromotion, matchTier: a.matchTier }}
                       selected={isSelected}
                       onSelect={() => onSelectAlt({ id: a.id, name: a.productName, 
                                 size: a.measurements ?? "—", effPrice: a.priceInfo.effectivePrice, 

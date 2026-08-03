@@ -1,8 +1,8 @@
 //@ts-nocheck
 import { useState } from "react";
 import { Pencil, Plus, Star, Upload } from "lucide-react";
-import type { ShoppingListStructure } from "../../../types";
-import useImportShoppingList from "../hooks/useImportShoppingList";
+import type { ShoppingListStructure } from "../../types";
+import useImportShoppingList from "./useImportShoppingList";
 
 export default function ShoppingListCreateForm({ onConfirm, onClose, initialName = "", initialStarred = false }) {
     const [name, setName] = useState(initialName);

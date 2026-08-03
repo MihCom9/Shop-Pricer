@@ -3,10 +3,9 @@ import { Tag, Store } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import PromotionCard from './PromotionCard/PromotionCard';
 import { supabase } from '../../lib/supabase';
-import PromotionFilter from './PromotionFilter/PromotionFilter';
 import BrowseModal from './PromotionCard/BrowseModal';
-import SelectListModal from './SelectList/SelectListModal';
-import BrowseFilter from './PromotionFilter/BrowseFilter';
+import SelectListModal from './SelectListModal';
+import BrowseFilter from './BrowseFilter';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 const PAGE_SIZE = 40;

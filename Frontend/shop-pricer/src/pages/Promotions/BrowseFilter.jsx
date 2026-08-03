@@ -1,7 +1,7 @@
 import { Search, SlidersHorizontal } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import ComboSelect from "../../../components/Select/ComboSelect";
-import RadioSelect from "../../../components/Select/RadioSelect";
+import ComboSelect from "../../components/Select/ComboSelect";
+import RadioSelect from "../../components/Select/RadioSelect";
 
 const API_BASE_URL = 'http://localhost:8080/api';
 const LABEL = "text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5";

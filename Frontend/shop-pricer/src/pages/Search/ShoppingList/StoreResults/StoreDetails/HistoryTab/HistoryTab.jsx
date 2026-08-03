@@ -1,4 +1,4 @@
-import { fmt } from "../utils/util";
+import { fmt } from "../util";
 import MiniHistoryBar from "./MiniHistoryBar";
 import { TrendingDown, TrendingUp } from "lucide-react";
 

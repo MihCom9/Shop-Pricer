@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ShoppingCart, Plus, Star, Trash2, ChevronRight, ListChecks, SquarePen, Download } from "lucide-react";
 import ShoppingList from "./ShoppingList/ShoppingList";
 import type { ShoppingListStructure, SearchRequestItem } from "../../types";
-import ShoppingListCreateForm from "./ListCreateForm/ShoppingListCreateForm";
+import ShoppingListCreateForm from "./ShoppingListCreateForm";
 import type { StoreResult } from "./types";
 
 interface SearchPageProps {
@@ -105,7 +105,7 @@ export default function SearchPage({
         window.history.pushState({}, "", url);
     };
 
-    const exportList = (list: ShoppingListStructure): void => {
+    const exportListAsFile = (list: ShoppingListStructure): void => {
         if(!list) return;
         const fileName = list.name.replace(/[/\\?%*:|"<>]/g, "-");
         const { lastResults, lastOriginalResults, lastResultsAt, ...sendList } = list;
@@ -180,8 +180,9 @@ export default function SearchPage({
 
                         <div className="ml-auto">
                             <button
-                                onClick={() => exportList(selectedList)}
-                                className="text-stone-400 hover:text-stone-700 text-sm flex items-center gap-1.5 transition-colors"
+                                onClick={() => exportListAsFile(selectedList)}
+                                className=" border rounded-lg text-stone-400 hover:text-stone-600 hover:border-stone-500 text-sm flex 
+                                    px-2 py-1 items-center gap-1.5 transition-colors"
                             >
                                 <Download size={14} /> Export
                             </button>

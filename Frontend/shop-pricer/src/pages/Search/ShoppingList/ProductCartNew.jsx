@@ -1,17 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import {X} from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import {X, Check} from 'lucide-react';
 import ProductDetails from './ProductDetails';
 const API_BASE_URL = 'http://localhost:8080/api';
 
 const WEIGHT_UNITS = ['гр', 'кг', 'мл', 'л'];
+const RECENT_CATEGORIES_KEY = 'recentCategories';
+const MAX_RECENT_CATEGORIES = 6;
 
+const loadRecentCategories = () => {
+  try {
+    const raw = localStorage.getItem(RECENT_CATEGORIES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
 
-const formatLabel = (category, details, pieces, weightAmount, weightUnit) => {
-  const base = details ? `${category} — ${details}` : category;
-  const parts = [];
-  if (pieces > 1) parts.push(`${pieces}бр`);
-  if (weightUnit && parseFloat(weightAmount) > 0) parts.push(`${weightAmount} ${weightUnit}`);
-  return parts.length ? `${base} · ${parts.join(' · ')}` : base;
+const saveRecentCategory = (category) => {
+  const recent = loadRecentCategories().filter(c => c.name !== category.name);
+  recent.unshift({ name: category.name, unitType: category.unitType });
+  localStorage.setItem(RECENT_CATEGORIES_KEY, JSON.stringify(recent.slice(0, MAX_RECENT_CATEGORIES)));
 };
 
 const ProductCartNew = ({setCart, showModal, setShowModal}) => {
@@ -24,13 +32,21 @@ const ProductCartNew = ({setCart, showModal, setShowModal}) => {
   const [weightAmount, setWeightAmount] = useState('');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
+  const [input, setInput] = useState("");
   const [tags, setTags] = useState([]);
   const [brands, setBrands] = useState([]);
-  const allDetails = [details.trim(), ...tags].filter(Boolean).join(" ");
+  const [recentCategories, setRecentCategories] = useState([]);
+  const [addedMessage, setAddedMessage] = useState(null);
+  const addedTimerRef = useRef(null);
 
   useEffect(() => {
     if (showModal && step === 1) fetchCategories();
   }, [showModal]);
+
+  useEffect(() => {
+    setRecentCategories(loadRecentCategories());
+    return () => clearTimeout(addedTimerRef.current);
+  }, []);
 
   const fetchCategories = async () => {
     setLoading(true);
@@ -57,21 +73,45 @@ const ProductCartNew = ({setCart, showModal, setShowModal}) => {
 
   const addToCart = () => {
     if (!selectedCategory) return;
+
+    const savedPieces = selectedCategory.unitType === 'quantity' ? pieces : 1;
+    const savedWeightAmount = selectedCategory.unitType === 'quantity' ? null : (weightAmount ? parseFloat(weightAmount) : null);
+    const savedWeightUnit = selectedCategory.unitType === 'quantity' ? null : weightUnit;
+    const fullDetails = [details, ...tags].filter(Boolean).join(", ");
+
+    const labelParts = [];
+    if (selectedCategory.unitType === 'quantity' && savedPieces > 1) labelParts.push(`${savedPieces}бр`);
+    if (selectedCategory.unitType !== 'quantity' && savedWeightUnit && parseFloat(savedWeightAmount) > 0)
+        labelParts.push(`${savedWeightAmount} ${savedWeightUnit}`);
+
+    const label = fullDetails
+        ? `${selectedCategory.name} — ${fullDetails}${labelParts.length ? ' · ' + labelParts.join(' · ') : ''}`
+        : `${selectedCategory.name}${labelParts.length ? ' · ' + labelParts.join(' · ') : ''}`;
+
+
     setCart(prev => [...prev, {
       id: Date.now(),
       category: selectedCategory.name,
       unitType: selectedCategory.unitType,
-      details: allDetails,
+      details: details,
+      tags: tags,
       pieces,
       weightAmount: weightAmount ? parseFloat(weightAmount) : null,
       weightUnit,
-      label: formatLabel(selectedCategory.name, details.trim(), pieces, weightAmount, weightUnit),
+      label,
     }]);
-    closeModal();
+
+    saveRecentCategory(selectedCategory);
+    setRecentCategories(loadRecentCategories());
+
+    clearTimeout(addedTimerRef.current);
+    setAddedMessage(label);
+    addedTimerRef.current = setTimeout(() => setAddedMessage(null), 2500);
+
+    resetItemFields();
   };
 
-  const closeModal = () => {
-    setShowModal(false);
+  const resetItemFields = () => {
     setStep(1);
     setSelectedCategory('');
     setDetails('');
@@ -81,6 +121,12 @@ const ProductCartNew = ({setCart, showModal, setShowModal}) => {
     setSearch('');
     setTags([]);
     setBrands([]);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setAddedMessage(null);
+    resetItemFields();
   };
 
   const toggleWeightUnit = (u) => {
@@ -121,6 +167,28 @@ const ProductCartNew = ({setCart, showModal, setShowModal}) => {
               <>
                 {step === 1 && (
                   <>
+                    {addedMessage && (
+                      <div className="flex items-center gap-2 mb-4 px-4 py-2.5 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm">
+                        <Check size={16} />
+                        Added "{addedMessage}" — keep going!
+                      </div>
+                    )}
+                    {recentCategories.length > 0 && !search && (
+                      <div className="mb-4">
+                        <p className="text-stone-400 text-xs mb-2">Quick add</p>
+                        <div className="flex flex-wrap gap-2">
+                          {recentCategories.map(cat => (
+                            <button
+                              key={cat.name}
+                              onClick={() => handleCategorySelect(cat)}
+                              className="px-3 py-1.5 rounded-full border border-stone-200 bg-stone-50 hover:border-stone-400 hover:bg-stone-100 text-sm text-stone-700 transition-all"
+                            >
+                              {cat.name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <input
                       type="text"
                       value={search}
@@ -209,6 +277,7 @@ const ProductCartNew = ({setCart, showModal, setShowModal}) => {
                       )}
                     </div>
                     <ProductDetails details={details} setDetails={setDetails}
+                                input={input} setInput={setInput}
                                 tags={tags} setTags={setTags}
                                 brands={brands} setBrands={setBrands}
                     />

@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import {Trash2, SquarePen} from 'lucide-react';
+import ProductDetails from "./ProductDetails";
+import useFilterOptions from "./useFilterOptions";
 
 const WEIGHT_UNITS = ['гр', 'кг', 'мл', 'л'];
 
@@ -20,6 +22,9 @@ const ProductDisplay = ({item, setCart}) => {
     const [weightUnit, setWeightUnit] = useState(item.weightUnit ?? null);
     const [weightAmount, setWeightAmount] = useState(item.weightAmount ? String(item.weightAmount) : '');
     const detailsRef = useRef(null);
+    const [tag, setTag] = useState(item.tags[0]?? "");
+    const [brands, setBrands] = useState(item.brands?? []);
+    const measurements = useFilterOptions(item.categoryId, brands);
 
     useEffect(() => {
         if (showEdit && detailsRef.current) {
@@ -34,19 +39,20 @@ const ProductDisplay = ({item, setCart}) => {
         const savedPieces = isQuantity ? pieces : 1;
         const savedWeightAmount = isQuantity ? null : (weightAmount ? parseFloat(weightAmount) : null);
         const savedWeightUnit = isQuantity ? null : weightUnit;
+        const fullDetails = [details, tag].filter(Boolean).join(", ");
 
         const labelParts = [];
         if (isQuantity && savedPieces > 1) labelParts.push(`${savedPieces}бр`);
         if (!isQuantity && savedWeightUnit && parseFloat(savedWeightAmount) > 0) 
             labelParts.push(`${savedWeightAmount} ${savedWeightUnit}`);
 
-        const label = details
-            ? `${category} — ${details}${labelParts.length ? ' · ' + labelParts.join(' · ') : ''}`
+        const label = fullDetails
+            ? `${category} — ${fullDetails}${labelParts.length ? ' · ' + labelParts.join(' · ') : ''}`
             : `${category}${labelParts.length ? ' · ' + labelParts.join(' · ') : ''}`;
 
         setCart(prev => prev.map(i =>
             i.id === item.id
-                ? { ...i, details, pieces: savedPieces, weightAmount: savedWeightAmount, weightUnit: savedWeightUnit, label }
+                ? { ...i, details,tags: [tag] ,brands ,pieces: savedPieces, weightAmount: savedWeightAmount, weightUnit: savedWeightUnit, label }
                 : i
         ));
         setShowEdit(false);
@@ -101,17 +107,12 @@ const ProductDisplay = ({item, setCart}) => {
                                 className="w-full px-3 py-2 rounded-lg border border-stone-100 bg-stone-50 focus:outline-none text-stone-400 resize-none text-sm cursor-not-allowed"
                             />
                         </div>
-                        <div className="flex flex-row items-center">
-                            <p className="text-stone-400 text-sm w-20 shrink-0">Details</p>
-                            <textarea
-                                value={details}
-                                onChange={e => setDetails(e.target.value)}
-                                placeholder={`e.g. "прясно мляко 3%"`}
-                                rows={1}
-                                className="w-full px-3 py-2 rounded-lg border border-stone-200 focus:outline-none focus:border-stone-400 focus:bg-stone-50 text-stone-700 resize-none text-sm transition-colors"
-                                ref={detailsRef}
+
+                        <ProductDetails details={details} setDetails={setDetails}
+                                        measurements={measurements}
+                                        tag={tag} setTag={setTag}
+                                        brands={brands} setBrands={setBrands}
                             />
-                        </div>
 
                         {/* Quantity + size row */}
                         <div className="flex items-start gap-3">

@@ -13,14 +13,14 @@ import org.springframework.stereotype.Service;
 import com.example.demo.model.projection.Browse.PromotionProjectionMaterialized;
 import com.example.demo.model.response.Browse.PromotionItem;
 import com.example.demo.repository.BrowseRepository;
-import com.example.demo.repository.ProductTypeRepository;
+import com.example.demo.repository.CategoryRepository;
 
 @Service
 public class PromotionService {
     private final BrowseRepository browseRepository;
-    private final ProductTypeRepository productTypeRepository;
+    private final CategoryRepository productTypeRepository;
 
-    public PromotionService(BrowseRepository browseRepository, ProductTypeRepository productTypeRepository) {
+    public PromotionService(BrowseRepository browseRepository, CategoryRepository productTypeRepository) {
         this.browseRepository = browseRepository;
         this.productTypeRepository = productTypeRepository;
     }
@@ -67,7 +67,7 @@ public class PromotionService {
         }
         String categoryCode = null;
         if (category != null && !category.isBlank()) {
-            categoryCode = productTypeRepository.findByProductNameIgnoreCase(category)
+            categoryCode = productTypeRepository.findByNameIgnoreCase(category)
                     .map(pt -> pt.getCode().toString())
                     .orElse(null); // if not found by name, pass it as-is (maybe it's already a code)
         }

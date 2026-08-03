@@ -74,6 +74,11 @@ export default function Navbar() {
               `text-sm font-medium transition-colors ${isActive ? "text-gray-900" : "text-gray-400 hover:text-gray-700"}`
             }>Ai</NavLink>
           </li>
+          <li>
+            <NavLink to="/admin" className={({ isActive }) =>
+              `text-sm font-medium transition-colors ${isActive ? "text-gray-900" : "text-gray-400 hover:text-gray-700"}`
+            }>Admin</NavLink>
+          </li>
         </ul>
 
         {user ? (

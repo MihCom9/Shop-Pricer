@@ -1,5 +1,5 @@
 import { X, ShoppingCart, Star, Plus, ListChecks } from "lucide-react";
-import ShoppingListCreateForm from "../../Search/ListCreateForm/ShoppingListCreateForm";
+import ShoppingListCreateForm from "../Search/ShoppingListCreateForm";
 import { useState } from "react";
 
 function generateId() {
